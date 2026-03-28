@@ -74,39 +74,40 @@ body {
   max-width: 860px;
 }
 
-/* Wrapper interior que scrollea — el margen negativo saca la scrollbar fuera del panel */
+/* Wrapper interior que scrollea */
 #panel-scroll {
   height: 100%;
   max-height: calc(100vh - 110px);
   overflow-y: auto;
   overflow-x: hidden;
   padding: 50px 20px 24px;
-  /* Empuja la scrollbar 14px hacia la derecha, fuera del borde del panel */
-  margin-right: -14px;
-  padding-right: 34px; /* 20px original + 14px de compensación */
   box-sizing: border-box;
+  /* Scrollbar pegada al borde interior derecho */
+  padding-right: 12px;
 }
 
-/* Scrollbar estilizada */
+/* Scrollbar elegante */
 #panel-scroll::-webkit-scrollbar {
-  width: 5px;
+  width: 4px;
 }
 #panel-scroll::-webkit-scrollbar-track {
-  background: transparent;
+  background: rgba(15, 52, 96, 0.3);
+  border-radius: 0 14px 14px 0;
+  margin: 2px 0;
 }
 #panel-scroll::-webkit-scrollbar-thumb {
-  background: #0f3460;
+  background: #4285F4;
   border-radius: 10px;
-  border: 1px solid #1a4a8a;
+  opacity: 0.7;
 }
 #panel-scroll::-webkit-scrollbar-thumb:hover {
-  background: #4285F4;
+  background: #6aa3f8;
 }
 
 /* Firefox */
 #panel-scroll {
   scrollbar-width: thin;
-  scrollbar-color: #0f3460 transparent;
+  scrollbar-color: #4285F4 transparent;
 }
 
 @keyframes fadeIn {
@@ -184,9 +185,7 @@ body {
   object-fit: cover;
   border-radius: 7px;
   cursor: pointer;
-  transition: transform 0.15s;
 }
-.fotos-grid img:hover { transform: scale(1.01); }
 
 /* ── BOTONES DE ACCIÓN ── */
 .btns-accion {
