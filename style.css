@@ -529,3 +529,12 @@ body {
 .btn-capa:hover { border-color: #4285F4; color: #fff; }
 .btn-capa.activo  { background: #0f3460; border-color: #4285F4; color: #fff; }
 .btn-capa.inactivo { opacity: 0.45; }
+
+/* ── OVERRIDES MODAL NUEVA MARCA ── */
+#modal #modal-caja {
+  max-width: 736px;
+}
+#modal .editor-content {
+  min-height: 180px;
+  max-height: 400px;
+}

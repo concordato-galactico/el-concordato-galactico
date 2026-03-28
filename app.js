@@ -369,7 +369,7 @@ window.abrirPanel = function(marca) {
 
   contenido.innerHTML = `
     <h2>${marca.nombre}</h2>
-    ${marca.categoria ? `<p class="categoria">📂 ${marca.categoria}</p>` : ''}
+    ${marca.categoria ? `<p class="categoria"><strong>Categoría:</strong> ${marca.categoria}</p>` : ''}
     <div class="descripcion">${descHTML || '<em>Sin descripción</em>'}</div>
     ${fotosHTML}
     ${marca.autor ? `<p class="autor">✍️ ${marca.autor}</p>` : ''}
