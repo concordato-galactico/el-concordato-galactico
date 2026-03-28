@@ -13,7 +13,7 @@ const firebaseConfig = {
 };
 
 // 2. Tu Cloud Name de Cloudinary (del paso 3.2)
-const CLOUDINARY_CLOUD_NAME = "deb1ct129";   // ej: dxk8abc12
+const CLOUDINARY_CLOUD_NAME = "PEGA-AQUI";   // ej: dxk8abc12
 
 // 3. Tu Upload Preset de Cloudinary (del paso 3.3)
 const CLOUDINARY_PRESET = "mapa-fotos";       // el nombre que pusiste
@@ -70,9 +70,47 @@ CAPAS_EXTRA.forEach(c => {
   capasMenu[c.nombre] = L.imageOverlay(c.archivo, bounds);
 });
 
-L.control.layers(null, capasMenu, {
-  position: 'topright', collapsed: true,
-}).addTo(mapa);
+// — Botones de capas visibles directamente —
+const capasControl = document.createElement('div');
+capasControl.id = 'capas-control';
+
+const estadoCapas = {
+  pins:    true,
+  nombres: true,
+};
+
+function crearBtnCapa(label, key, capa) {
+  const btn = document.createElement('button');
+  btn.className = 'btn-capa activo';
+  btn.textContent = label;
+  btn.addEventListener('click', () => {
+    estadoCapas[key] = !estadoCapas[key];
+    if (estadoCapas[key]) {
+      mapa.addLayer(capa);
+      btn.classList.remove('inactivo');
+      btn.classList.add('activo');
+    } else {
+      mapa.removeLayer(capa);
+      btn.classList.remove('activo');
+      btn.classList.add('inactivo');
+    }
+  });
+  return btn;
+}
+
+capasControl.appendChild(crearBtnCapa('📌 Pins',    'pins',    grupoPins));
+capasControl.appendChild(crearBtnCapa('🏷️ Nombres', 'nombres', grupoNombres));
+
+CAPAS_EXTRA.forEach((c, i) => {
+  const key = `extra_${i}`;
+  estadoCapas[key] = false;
+  const btn = crearBtnCapa(c.nombre, key, capasMenu[c.nombre]);
+  btn.classList.remove('activo');
+  btn.classList.add('inactivo');
+  capasControl.appendChild(btn);
+});
+
+document.body.appendChild(capasControl);
 
 // ══════════════════════════════
 //  AUTENTICACIÓN

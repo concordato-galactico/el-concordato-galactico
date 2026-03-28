@@ -219,11 +219,31 @@ body {
   font-size: 17px; cursor: pointer;
 }
 
-/* ── CONTROL DE CAPAS ── */
-.leaflet-control-layers {
-  background: #16213e !important;
-  border: 1px solid #0f3460 !important;
-  border-radius: 10px !important;
+/* ── OCULTAR ATRIBUCIÓN LEAFLET ── */
+.leaflet-control-attribution { display: none !important; }
+
+/* ── BOTONES DE CAPAS ── */
+#capas-control {
+  position: fixed;
+  top: 58px; left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  display: flex;
+  gap: 8px;
 }
-.leaflet-control-layers-toggle { background-color: #e94560 !important; }
-.leaflet-control-layers label { color: #ddd !important; font-size: 0.88rem; }
+
+.btn-capa {
+  background: rgba(22, 33, 62, 0.92);
+  border: 1px solid #0f3460;
+  color: #ddd;
+  padding: 7px 16px;
+  border-radius: 20px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  transition: all 0.2s;
+  user-select: none;
+}
+.btn-capa:hover { border-color: #4285F4; color: #fff; }
+.btn-capa.activo { background: #0f3460; border-color: #4285F4; color: #fff; }
+.btn-capa.inactivo { opacity: 0.45; }
