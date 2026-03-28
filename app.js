@@ -217,15 +217,36 @@ mapa.on('click', function(e) {
 
 window.formatText = function(cmd) {
   document.execCommand(cmd, false, null);
+  actualizarBotonesFormato();
 };
 
 window.formatSize = function(selectEl) {
   const val = selectEl.value;
   if (!val) return;
   document.execCommand('fontSize', false, val);
-  // Restablecer el select visualmente
   setTimeout(() => { selectEl.value = ''; }, 100);
 };
+
+function actualizarBotonesFormato() {
+  const comandos = { bold: 'bold', italic: 'italic', underline: 'underline' };
+  document.querySelectorAll('.editor-toolbar button').forEach(btn => {
+    const onclick = btn.getAttribute('onclick') || '';
+    for (const [cmd, label] of Object.entries(comandos)) {
+      if (onclick.includes(`'${cmd}'`)) {
+        const activo = document.queryCommandState(cmd);
+        btn.classList.toggle('btn-formato-activo', activo);
+      }
+    }
+  });
+}
+
+document.addEventListener('selectionchange', () => {
+  // Solo actualizar si el foco está en algún editor
+  const activo = document.activeElement;
+  if (activo && activo.classList.contains('editor-content')) {
+    actualizarBotonesFormato();
+  }
+});
 
 // ══════════════════════════════
 //  MODAL NUEVA MARCA

@@ -298,8 +298,7 @@ body {
   line-height: 1.6;
   word-break: break-word;
   overflow-y: auto;
-  max-height: 200px;
-  /* Estilos internos del rich text */
+  max-height: 400px;
 }
 
 /* Placeholder para contenteditable */
@@ -314,6 +313,13 @@ body {
 .editor-content i, .editor-content em     { font-style: italic; }
 .editor-content u                         { text-decoration: underline; }
 
+/* Botón de formato activo */
+.editor-toolbar button.btn-formato-activo {
+  background: #1a4a8a;
+  border-color: #4285F4;
+  color: #fff;
+}
+
 /* ── MODAL NUEVA MARCA ── */
 #modal {
   position: fixed; inset: 0;
@@ -326,8 +332,8 @@ body {
   background: #16213e;
   border: 2px solid #0f3460;
   border-radius: 14px; padding: 28px;
-  width: 90%; max-width: 460px;
-  max-height: 88vh; overflow-y: auto;
+  width: 90%; max-width: 736px;
+  max-height: 95vh; overflow-y: auto;
 }
 
 #modal-caja h2 { color: #e94560; margin-bottom: 18px; font-size: 1.3rem; }
@@ -384,8 +390,8 @@ body {
   background: #16213e;
   border: 2px solid #4285F4;
   border-radius: 14px; padding: 28px;
-  width: 90%; max-width: 460px;
-  max-height: 88vh; overflow-y: auto;
+  width: 90%; max-width: 736px;
+  max-height: 95vh; overflow-y: auto;
 }
 
 #modal-edicion-caja h2 { color: #4285F4; margin-bottom: 18px; font-size: 1.3rem; }
