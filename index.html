@@ -24,7 +24,9 @@
   <!-- Panel lateral -->
   <div id="panel" class="oculto">
     <button class="btn-cerrar" onclick="cerrarPanel()">✕</button>
-    <div id="panel-contenido"></div>
+    <div id="panel-scroll">
+      <div id="panel-contenido"></div>
+    </div>
     <!-- Asa de redimensión -->
     <div id="panel-resize-handle" title="Arrastrar para redimensionar"></div>
   </div>
@@ -43,8 +45,8 @@
     <div id="modal-caja">
       <h2>📌 Nueva marca</h2>
 
-      <label>Título *</label>
-      <input type="text" id="input-nombre" placeholder="Escribe lo que quieras..." />
+      <label>Nombre del lugar *</label>
+      <input type="text" id="input-nombre" placeholder="Ej: Nebulosa de los Caídos" />
 
       <label>Descripción</label>
       <div class="editor-toolbar">
@@ -72,7 +74,7 @@
         <span id="progreso-texto">Subiendo fotos...</span>
       </div>
 
-      <button id="btn-guardar" onclick="guardarPin()">💾 Guardar</button>
+      <button id="btn-guardar" onclick="guardarPin()">💾 Guardar marca</button>
       <button class="btn-secundario" onclick="cerrarModal()">Cancelar</button>
     </div>
   </div>
@@ -82,8 +84,8 @@
     <div id="modal-edicion-caja">
       <h2>✏️ Editar marca</h2>
 
-      <label>Título *</label>
-      <input type="text" id="edit-nombre" placeholder="Escribe lo que quieras..." />
+      <label>Nombre del lugar *</label>
+      <input type="text" id="edit-nombre" placeholder="Ej: Nebulosa de los Caídos" />
 
       <label>Descripción</label>
       <div class="editor-toolbar">
