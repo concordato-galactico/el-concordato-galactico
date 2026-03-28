@@ -13,7 +13,7 @@ const firebaseConfig = {
 };
 
 // 2. Tu Cloud Name de Cloudinary (del paso 3.2)
-const CLOUDINARY_CLOUD_NAME = "PEGA-AQUI";   // ej: dxk8abc12
+const CLOUDINARY_CLOUD_NAME = "deb1ct129";   // ej: dxk8abc12
 
 // 3. Tu Upload Preset de Cloudinary (del paso 3.3)
 const CLOUDINARY_PRESET = "mapa-fotos";       // el nombre que pusiste
