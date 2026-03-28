@@ -276,6 +276,12 @@ body {
   color: #fff;
 }
 
+.editor-toolbar button.activo {
+  background: #1a4a8a;
+  border-color: #4285F4;
+  color: #fff;
+}
+
 .toolbar-sep {
   width: 1px;
   height: 18px;

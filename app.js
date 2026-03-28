@@ -215,17 +215,39 @@ mapa.on('click', function(e) {
 //  EDITOR DE TEXTO ENRIQUECIDO
 // ══════════════════════════════
 
+function actualizarToolbar(editorEl) {
+  const toolbar = editorEl.previousElementSibling;
+  if (!toolbar || !toolbar.classList.contains('editor-toolbar')) return;
+
+  ['bold', 'italic', 'underline'].forEach(cmd => {
+    const btn = toolbar.querySelector(`button[onclick="formatText('${cmd}')"]`);
+    if (btn) btn.classList.toggle('activo', document.queryCommandState(cmd));
+  });
+
+  const size = document.queryCommandValue('fontSize');
+  const sel  = toolbar.querySelector('select');
+  if (sel) sel.value = (size && size !== 'false') ? size : '';
+}
+
 window.formatText = function(cmd) {
   document.execCommand(cmd, false, null);
+  const active = document.activeElement;
+  if (active && active.classList.contains('editor-content')) actualizarToolbar(active);
 };
 
 window.formatSize = function(selectEl) {
   const val = selectEl.value;
   if (!val) return;
   document.execCommand('fontSize', false, val);
-  // Restablecer el select visualmente
-  setTimeout(() => { selectEl.value = ''; }, 100);
 };
+
+// Actualizar toolbar al mover el cursor o cambiar la selección
+document.addEventListener('selectionchange', () => {
+  const active = document.activeElement;
+  if (active && active.classList.contains('editor-content')) {
+    actualizarToolbar(active);
+  }
+});
 
 // ══════════════════════════════
 //  MODAL NUEVA MARCA
