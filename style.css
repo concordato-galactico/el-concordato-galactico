@@ -294,7 +294,7 @@ body {
   cursor: pointer;
   outline: none;
   transition: background 0.15s, border-color 0.15s;
-  max-width: 90px;
+  max-width: 100px;
 }
 .editor-toolbar select:hover,
 .editor-toolbar select:focus {
