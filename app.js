@@ -13,14 +13,14 @@ const firebaseConfig = {
 };
 
 // 2. Tu Cloud Name de Cloudinary (del paso 3.2)
-const CLOUDINARY_CLOUD_NAME = "PEGA-AQUI";   // ej: dxk8abc12
+const CLOUDINARY_CLOUD_NAME = "deb1ct129";   // ej: dxk8abc12
 
 // 3. Tu Upload Preset de Cloudinary (del paso 3.3)
 const CLOUDINARY_PRESET = "mapa-fotos";       // el nombre que pusiste
 
 // 4. Dimensiones de tu imagen del mapa en píxeles
-const ANCHO_MAPA = 8000;   // ← pon el ancho real
-const ALTO_MAPA  = 5000;   // ← pon el alto real
+const ANCHO_MAPA = 8192;
+const ALTO_MAPA  = 8192;
 
 // 5. Nombre del archivo del mapa
 const ARCHIVO_MAPA = 'mapa-base.png';
@@ -227,7 +227,7 @@ async function subirFotoCloudinary(archivo, indice, total) {
   if (!res.ok) throw new Error(`Error Cloudinary: ${res.status}`);
 
   const data = await res.json();
-  return data.secure_url;  // URL pública de la foto
+  return data.secure_url;
 }
 
 // ══════════════════════════════
