@@ -13,10 +13,10 @@ const firebaseConfig = {
 };
 
 // 2. Tu Cloud Name de Cloudinary (del paso 3.2)
-const CLOUDINARY_CLOUD_NAME = "deb1ct129";   // ej: dxk8abc12
+const CLOUDINARY_CLOUD_NAME = "deb1ct129";
 
 // 3. Tu Upload Preset de Cloudinary (del paso 3.3)
-const CLOUDINARY_PRESET = "mapa-fotos";       // el nombre que pusiste
+const CLOUDINARY_PRESET = "mapa-fotos";
 
 // 4. Dimensiones de tu imagen del mapa en píxeles
 const ANCHO_MAPA = 8192;
@@ -36,7 +36,7 @@ const CAPAS_EXTRA = [
 
 import { initializeApp }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, addDoc, onSnapshot }
+import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import {
   getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged
@@ -61,23 +61,10 @@ L.imageOverlay(ARCHIVO_MAPA, bounds).addTo(mapa);
 const grupoPins    = L.layerGroup().addTo(mapa);
 const grupoNombres = L.layerGroup().addTo(mapa);
 
-const capasMenu = {
-  '📌 Pins':     grupoPins,
-  '🏷️ Nombres':  grupoNombres,
-};
+const estadoCapas = { marcas: true, nombres: true };
 
-CAPAS_EXTRA.forEach(c => {
-  capasMenu[c.nombre] = L.imageOverlay(c.archivo, bounds);
-});
-
-// — Botones de capas visibles directamente —
 const capasControl = document.createElement('div');
 capasControl.id = 'capas-control';
-
-const estadoCapas = {
-  pins:    true,
-  nombres: true,
-};
 
 function crearBtnCapa(label, key, capa) {
   const btn = document.createElement('button');
@@ -98,13 +85,14 @@ function crearBtnCapa(label, key, capa) {
   return btn;
 }
 
-capasControl.appendChild(crearBtnCapa('📌 Pins',    'pins',    grupoPins));
+capasControl.appendChild(crearBtnCapa('📌 Marcas',  'marcas',  grupoPins));
 capasControl.appendChild(crearBtnCapa('🏷️ Nombres', 'nombres', grupoNombres));
 
 CAPAS_EXTRA.forEach((c, i) => {
-  const key = `extra_${i}`;
+  const capa = L.imageOverlay(c.archivo, bounds);
+  const key  = `extra_${i}`;
   estadoCapas[key] = false;
-  const btn = crearBtnCapa(c.nombre, key, capasMenu[c.nombre]);
+  const btn = crearBtnCapa(c.nombre, key, capa);
   btn.classList.remove('activo');
   btn.classList.add('inactivo');
   capasControl.appendChild(btn);
@@ -157,16 +145,19 @@ window.logoutGoogle = async function() {
 };
 
 // ══════════════════════════════
-//  CARGAR PINS
+//  CARGAR MARCAS
 // ══════════════════════════════
 
 onSnapshot(pinsCol, (snapshot) => {
   snapshot.docChanges().forEach(change => {
-    if (change.type === 'added') añadirPinAlMapa(change.doc.data());
+    if (change.type === 'added') {
+      const datos = { ...change.doc.data(), id: change.doc.id };
+      añadirMarcaAlMapa(datos);
+    }
   });
 });
 
-function añadirPinAlMapa(pin) {
+function añadirMarcaAlMapa(marca) {
   const icono = L.divIcon({
     className: '',
     html: `<div style="
@@ -177,18 +168,18 @@ function añadirPinAlMapa(pin) {
     iconSize: [16, 16], iconAnchor: [8, 16],
   });
 
-  const marker = L.marker([pin.lat, pin.lng], { icon: icono });
-  marker.on('click', () => abrirPanel(pin));
+  const marker = L.marker([marca.lat, marca.lng], { icon: icono });
+  marker.on('click', () => abrirPanel(marca));
   grupoPins.addLayer(marker);
 
   const etiqueta = L.tooltip({
     permanent: true, direction: 'top', offset: [0, -18],
-  }).setContent(pin.nombre).setLatLng([pin.lat, pin.lng]);
+  }).setContent(marca.nombre).setLatLng([marca.lat, marca.lng]);
   grupoNombres.addLayer(etiqueta);
 }
 
 // ══════════════════════════════
-//  MODO AÑADIR PIN
+//  MODO AÑADIR MARCA
 // ══════════════════════════════
 
 let modoAñadirPin  = false;
@@ -269,7 +260,7 @@ async function subirFotoCloudinary(archivo, indice, total) {
 }
 
 // ══════════════════════════════
-//  GUARDAR PIN
+//  GUARDAR MARCA
 // ══════════════════════════════
 
 window.guardarPin = async function() {
@@ -320,7 +311,28 @@ window.guardarPin = async function() {
     }
   } finally {
     btnGuardar.disabled = false;
-    btnGuardar.textContent = '💾 Guardar pin';
+    btnGuardar.textContent = '💾 Guardar marca';
+  }
+};
+
+// ══════════════════════════════
+//  BORRAR MARCA
+// ══════════════════════════════
+
+window.borrarMarca = async function(id) {
+  const confirmar = confirm('¿Seguro que quieres borrarla?');
+  if (!confirmar) return;
+  try {
+    await deleteDoc(doc(db, 'pins', id));
+    cerrarPanel();
+    location.reload();
+  } catch (err) {
+    console.error('Error al borrar:', err);
+    if (err.code === 'permission-denied') {
+      alert('No tienes permiso para borrar esta marca.');
+    } else {
+      alert('Error al borrar. Abre la consola (F12) para ver el detalle.');
+    }
   }
 };
 
@@ -328,28 +340,27 @@ window.guardarPin = async function() {
 //  PANEL LATERAL
 // ══════════════════════════════
 
-window.abrirPanel = function(pin) {
+window.abrirPanel = function(marca) {
   const contenido = document.getElementById('panel-contenido');
 
-  const fecha = pin.creadoEn
-    ? new Date(pin.creadoEn).toLocaleDateString('es-ES',
-        { day: 'numeric', month: 'long', year: 'numeric' })
-    : '';
-
-  const fotosHTML = (pin.fotos || []).length > 0
+  const fotosHTML = (marca.fotos || []).length > 0
     ? `<div class="fotos-grid">${
-        pin.fotos.map(url =>
+        marca.fotos.map(url =>
           `<img src="${url}" onclick="abrirLightbox('${url}')" />`
         ).join('')
       }</div>`
     : '';
 
+  const btnBorrar = usuarioActual
+    ? `<button class="btn-borrar" onclick="borrarMarca('${marca.id}')">🗑️ Borrar marca</button>`
+    : '';
+
   contenido.innerHTML = `
-    <h2>${pin.nombre}</h2>
-    ${pin.autor ? `<p class="autor">✍️ ${pin.autor}</p>` : ''}
-    ${fecha     ? `<p class="fecha">📅 ${fecha}</p>`     : ''}
-    <p class="descripcion">${pin.descripcion || '<em>Sin descripción</em>'}</p>
+    <h2>${marca.nombre}</h2>
+    <p class="descripcion">${marca.descripcion || '<em>Sin descripción</em>'}</p>
     ${fotosHTML}
+    ${marca.autor ? `<p class="autor">✍️ ${marca.autor}</p>` : ''}
+    ${btnBorrar}
   `;
 
   document.getElementById('panel').classList.remove('oculto');

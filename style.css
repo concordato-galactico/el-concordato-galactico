@@ -59,11 +59,10 @@ body {
 /* ── PANEL LATERAL ── */
 #panel {
   position: fixed;
-  top: 50%;
+  top: 90px;
   left: 20px;
-  transform: translateY(-50%);
-  width: 340px;
-  max-height: 80vh;
+  width: 544px;
+  max-height: calc(100vh - 110px);
   background: #16213e;
   border: 2px solid #0f3460;
   border-radius: 16px;
@@ -75,8 +74,8 @@ body {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-50%) scale(0.97); }
-  to   { opacity: 1; transform: translateY(-50%) scale(1); }
+  from { opacity: 0; transform: scale(0.97); }
+  to   { opacity: 1; transform: scale(1); }
 }
 
 .btn-cerrar {
@@ -98,17 +97,33 @@ body {
 #panel-contenido .autor { font-size: 0.8rem; color: #4285F4; margin-bottom: 15px; }
 
 .fotos-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  display: flex;
+  flex-direction: column;
   gap: 6px;
   margin-top: 10px;
 }
 .fotos-grid img {
-  width: 100%; aspect-ratio: 1;
-  object-fit: cover; border-radius: 7px;
-  cursor: pointer; transition: transform 0.15s;
+  width: 100%;
+  object-fit: cover;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: transform 0.15s;
 }
-.fotos-grid img:hover { transform: scale(1.04); }
+.fotos-grid img:hover { transform: scale(1.01); }
+
+/* ── BOTÓN BORRAR MARCA ── */
+.btn-borrar {
+  background: transparent;
+  border: 1px solid #e94560;
+  color: #e94560;
+  padding: 9px;
+  border-radius: 9px;
+  font-size: 0.88rem;
+  cursor: pointer;
+  margin-top: 16px;
+  width: 100%;
+}
+.btn-borrar:hover { background: #e94560; color: #fff; }
 
 /* ── BOTÓN AÑADIR PIN ── */
 #btn-añadir {

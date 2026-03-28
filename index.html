@@ -28,19 +28,19 @@
     <div id="panel-contenido"></div>
   </div>
 
-  <!-- Botón añadir pin -->
-  <button id="btn-añadir" class="oculto" onclick="activarModoPin()">📌 Añadir pin</button>
+  <!-- Botón añadir marca -->
+  <button id="btn-añadir" class="oculto" onclick="activarModoPin()">📌 Añadir marca</button>
 
-  <!-- Instrucción modo pin -->
+  <!-- Instrucción modo marca -->
   <div id="instruccion" class="oculto">
-    Haz clic en el mapa para colocar el pin
+    Haz clic en el mapa para colocar la marca
     <button onclick="cancelarModoPin()">Cancelar</button>
   </div>
 
-  <!-- Modal nuevo pin -->
+  <!-- Modal nueva marca -->
   <div id="modal" class="oculto">
     <div id="modal-caja">
-      <h2>📌 Nuevo pin</h2>
+      <h2>📌 Nueva marca</h2>
 
       <label>Nombre del lugar *</label>
       <input type="text" id="input-nombre" placeholder="Ej: Nebulosa de los Caídos" />
@@ -57,7 +57,7 @@
         <span id="progreso-texto">Subiendo fotos...</span>
       </div>
 
-      <button id="btn-guardar" onclick="guardarPin()">💾 Guardar pin</button>
+      <button id="btn-guardar" onclick="guardarPin()">💾 Guardar marca</button>
       <button class="btn-secundario" onclick="cerrarModal()">Cancelar</button>
     </div>
   </div>
