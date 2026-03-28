@@ -259,6 +259,154 @@ document.addEventListener('selectionchange', () => {
 });
 
 // ══════════════════════════════
+//  IMÁGENES INLINE EN EDITOR
+// ══════════════════════════════
+
+let rangoGuardado   = null;
+let editorCapturado = null;
+
+function guardarRangoSeleccion() {
+  const sel = window.getSelection();
+  rangoGuardado   = (sel && sel.rangeCount > 0) ? sel.getRangeAt(0).cloneRange() : null;
+  editorCapturado = editorActivo;
+}
+
+function restaurarRangoSeleccion() {
+  if (!rangoGuardado || !editorCapturado) return;
+  editorCapturado.focus();
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(rangoGuardado);
+}
+
+window.insertarImagenEditor = function() {
+  if (!editorActivo) { alert('Haz clic primero dentro del editor de texto.'); return; }
+  guardarRangoSeleccion();
+
+  const fileInput = document.createElement('input');
+  fileInput.type  = 'file';
+  fileInput.accept = 'image/*';
+
+  fileInput.addEventListener('change', async function() {
+    const file = fileInput.files[0];
+    if (!file) return;
+
+    const isEdit  = editorCapturado && editorCapturado.id === 'edit-descripcion-editor';
+    const barraId = isEdit ? 'edit-progreso-barra' : 'progreso-barra';
+    const textoId = isEdit ? 'edit-progreso-texto' : 'progreso-texto';
+    const cajaEl  = document.getElementById(isEdit ? 'edit-progreso-caja' : 'progreso-caja');
+
+    cajaEl.classList.remove('oculto');
+    try {
+      const url = await subirFotoCloudinary(file, 0, 1, barraId, textoId);
+      document.getElementById(textoId).textContent = 'Imagen insertada ✓';
+      insertarImgEnEditor(url);
+    } catch (err) {
+      console.error('Error subiendo imagen inline:', err);
+      alert('Error al subir la imagen.');
+    }
+  });
+
+  fileInput.click();
+};
+
+function crearControlesImg(size, align) {
+  size  = size  || 100;
+  align = align || 'center';
+  const div = document.createElement('div');
+  div.className = 'img-inline-controls';
+  div.innerHTML = `
+    <button type="button" class="iic-btn" onclick="imgInlineSize(this,-25)" title="Reducir (−25%)">−</button>
+    <span class="img-size-label">${size}%</span>
+    <button type="button" class="iic-btn" onclick="imgInlineSize(this,25)"  title="Ampliar (+25%)">+</button>
+    <span class="iic-sep"></span>
+    <button type="button" class="iic-btn${align==='left'  ?' activo':''}" onclick="imgInlineAlign(this,'left')"   title="Alinear izquierda">⬅</button>
+    <button type="button" class="iic-btn${align==='center'?' activo':''}" onclick="imgInlineAlign(this,'center')" title="Centrar">⬌</button>
+    <button type="button" class="iic-btn${align==='right' ?' activo':''}" onclick="imgInlineAlign(this,'right')"  title="Alinear derecha">➡</button>
+    <span class="iic-sep"></span>
+    <button type="button" class="iic-btn iic-del" onclick="this.closest('.img-inline').remove()" title="Eliminar imagen">✕</button>
+  `;
+  return div;
+}
+
+function insertarImgEnEditor(url) {
+  restaurarRangoSeleccion();
+
+  const wrapper = document.createElement('div');
+  wrapper.className        = 'img-inline';
+  wrapper.contentEditable  = 'false';
+  wrapper.style.textAlign  = 'center';
+  wrapper.dataset.size     = '100';
+  wrapper.dataset.align    = 'center';
+  wrapper.appendChild(crearControlesImg(100, 'center'));
+
+  const img = document.createElement('img');
+  img.src             = url;
+  img.style.cssText   = 'width:100%;max-width:100%;border-radius:6px;display:block;margin:0 auto;';
+  wrapper.appendChild(img);
+
+  if (rangoGuardado) {
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(rangoGuardado);
+    rangoGuardado.deleteContents();
+    rangoGuardado.insertNode(wrapper);
+    const range = document.createRange();
+    range.setStartAfter(wrapper);
+    range.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(range);
+  } else if (editorCapturado) {
+    editorCapturado.appendChild(wrapper);
+  }
+}
+
+window.imgInlineSize = function(btn, delta) {
+  const wrapper = btn.closest('.img-inline');
+  let size = parseInt(wrapper.dataset.size || '100');
+  size = Math.min(100, Math.max(10, size + delta));
+  wrapper.dataset.size = size;
+  wrapper.querySelector('img').style.width = size + '%';
+  wrapper.querySelector('.img-size-label').textContent = size + '%';
+};
+
+window.imgInlineAlign = function(btn, align) {
+  const wrapper = btn.closest('.img-inline');
+  wrapper.dataset.align   = align;
+  wrapper.style.textAlign = align;
+  wrapper.querySelectorAll('.iic-btn').forEach(b => {
+    if (['⬅','⬌','➡'].includes(b.textContent.trim())) b.classList.remove('activo');
+  });
+  btn.classList.add('activo');
+};
+
+// Elimina los controles del HTML antes de guardar en Firestore
+function limpiarEditorHTML(html) {
+  const tmp = document.createElement('div');
+  tmp.innerHTML = html;
+  tmp.querySelectorAll('.img-inline-controls').forEach(el => el.remove());
+  return tmp.innerHTML;
+}
+
+// Reinyecta los controles al cargar un editor en modo edición
+function reinjectImgControls(editorEl) {
+  editorEl.querySelectorAll('.img-inline').forEach(wrapper => {
+    wrapper.querySelectorAll('.img-inline-controls').forEach(c => c.remove());
+    const size  = parseInt(wrapper.dataset.size  || '100');
+    const align = wrapper.dataset.align || 'center';
+    wrapper.insertBefore(crearControlesImg(size, align), wrapper.firstChild);
+    wrapper.contentEditable = 'false';
+    // Sync image width in case it was saved with a specific width
+    const img = wrapper.querySelector('img');
+    if (img) {
+      img.style.width  = size + '%';
+      img.style.display = 'block';
+      img.style.margin  = '0 auto';
+    }
+  });
+}
+
+// ══════════════════════════════
 //  MODAL NUEVA MARCA
 // ══════════════════════════════
 
@@ -314,7 +462,7 @@ async function subirFotoCloudinary(archivo, indice, total, barraId = 'progreso-b
 window.guardarPin = async function() {
   const nombre      = document.getElementById('input-nombre').value.trim();
   const categoria   = document.getElementById('input-categoria').value;
-  const descripcion = document.getElementById('input-descripcion-editor').innerHTML.trim();
+  const descripcion = limpiarEditorHTML(document.getElementById('input-descripcion-editor').innerHTML.trim());
   const archivos    = document.getElementById('input-fotos').files;
   const btnGuardar  = document.getElementById('btn-guardar');
 
@@ -434,6 +582,7 @@ window.abrirModalEdicion = function() {
   const desc = marca.descripcion || '';
   document.getElementById('edit-descripcion-editor').innerHTML =
     desc.startsWith('<') ? desc : desc.replace(/\n/g, '<br>');
+  reinjectImgControls(document.getElementById('edit-descripcion-editor'));
 
   document.getElementById('edit-fotos-nuevas').value = '';
   document.getElementById('edit-preview-nuevas').innerHTML = '';
@@ -481,7 +630,7 @@ document.getElementById('edit-fotos-nuevas').addEventListener('change', function
 window.guardarEdicion = async function() {
   const nombre         = document.getElementById('edit-nombre').value.trim();
   const categoria      = document.getElementById('edit-categoria').value;
-  const descripcion    = document.getElementById('edit-descripcion-editor').innerHTML.trim();
+  const descripcion    = limpiarEditorHTML(document.getElementById('edit-descripcion-editor').innerHTML.trim());
   const archivosNuevos = document.getElementById('edit-fotos-nuevas').files;
   const btnGuardar     = document.getElementById('btn-guardar-edicion');
 

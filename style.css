@@ -492,6 +492,108 @@ body {
 #btn-guardar-edicion:hover { background: #3367d6; }
 #btn-guardar-edicion:disabled { opacity: 0.5; cursor: not-allowed; }
 
+/* ── IMÁGENES INLINE EN EDITOR ── */
+
+/* Wrapper no editable que contiene controles + imagen */
+.img-inline {
+  display: block;
+  margin: 10px 0;
+  border-radius: 8px;
+  border: 1.5px dashed transparent;
+  padding: 2px;
+  transition: border-color 0.15s;
+  /* Evita que el cursor de texto entre en él */
+  user-select: none;
+}
+
+/* Resaltar al pasar el ratón (solo dentro del editor) */
+.editor-content .img-inline:hover {
+  border-color: #4285F4;
+}
+
+/* Barra de controles */
+.img-inline-controls {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  background: #0a2240;
+  border: 1px solid #1a4a8a;
+  border-radius: 6px 6px 0 0;
+  padding: 4px 7px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+}
+
+/* Botones de la barra */
+.iic-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: #bbb;
+  min-width: 26px;
+  height: 24px;
+  border-radius: 4px;
+  font-size: 0.88rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  flex-shrink: 0;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+  line-height: 1;
+}
+.iic-btn:hover {
+  background: #1a4a8a;
+  border-color: #4285F4;
+  color: #fff;
+}
+.iic-btn.activo {
+  background: #1a4a8a;
+  border-color: #4285F4;
+  color: #fff;
+}
+.iic-btn.iic-del { color: #e94560; }
+.iic-btn.iic-del:hover { background: #e94560; border-color: #e94560; color: #fff; }
+
+/* Separador vertical en la barra */
+.iic-sep {
+  display: inline-block;
+  width: 1px;
+  height: 16px;
+  background: #1a4a8a;
+  margin: 0 3px;
+  flex-shrink: 0;
+}
+
+/* Etiqueta de porcentaje */
+.img-size-label {
+  font-size: 0.75rem;
+  color: #aaa;
+  min-width: 34px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+/* Imagen dentro del wrapper — dentro del editor */
+.editor-content .img-inline img {
+  border-radius: 0 0 6px 6px;
+  display: block;
+  max-width: 100%;
+}
+
+/* En el panel de visualización: sin controles, imagen limpia */
+.descripcion .img-inline {
+  border: none;
+  padding: 0;
+  margin: 10px 0;
+}
+.descripcion .img-inline-controls { display: none !important; }
+.descripcion .img-inline img {
+  border-radius: 6px;
+  max-width: 100%;
+  display: block;
+}
+
 /* ── LIGHTBOX ── */
 #lightbox {
   position: fixed; inset: 0;
