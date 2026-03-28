@@ -36,7 +36,7 @@ const CAPAS_EXTRA = [
 
 import { initializeApp }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot }
+import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, updateDoc }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import {
   getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged
@@ -208,7 +208,7 @@ mapa.on('click', function(e) {
 });
 
 // ══════════════════════════════
-//  MODAL
+//  MODAL NUEVA MARCA
 // ══════════════════════════════
 
 window.abrirModal = function() {
@@ -240,14 +240,14 @@ document.getElementById('input-fotos').addEventListener('change', function() {
 //  SUBIR FOTO A CLOUDINARY
 // ══════════════════════════════
 
-async function subirFotoCloudinary(archivo, indice, total) {
+async function subirFotoCloudinary(archivo, indice, total, barraId = 'progreso-barra', textoId = 'progreso-texto') {
   const formData = new FormData();
   formData.append('file', archivo);
   formData.append('upload_preset', CLOUDINARY_PRESET);
 
-  document.getElementById('progreso-texto').textContent =
+  document.getElementById(textoId).textContent =
     `Subiendo foto ${indice + 1} de ${total}...`;
-  document.getElementById('progreso-barra').style.width =
+  document.getElementById(barraId).style.width =
     Math.round((indice / total) * 100) + '%';
 
   const url = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`;
@@ -340,7 +340,10 @@ window.borrarMarca = async function(id) {
 //  PANEL LATERAL
 // ══════════════════════════════
 
+let marcaAbierta = null;
+
 window.abrirPanel = function(marca) {
+  marcaAbierta = marca;
   const contenido = document.getElementById('panel-contenido');
 
   const fotosHTML = (marca.fotos || []).length > 0
@@ -351,8 +354,11 @@ window.abrirPanel = function(marca) {
       }</div>`
     : '';
 
-  const btnBorrar = usuarioActual
-    ? `<button class="btn-borrar" onclick="borrarMarca('${marca.id}')">🗑️ Borrar marca</button>`
+  const btnsAccion = usuarioActual
+    ? `<div class="btns-accion">
+        <button class="btn-editar" onclick="abrirModalEdicion()">✏️ Editar</button>
+        <button class="btn-borrar" onclick="borrarMarca('${marca.id}')">🗑️ Borrar</button>
+      </div>`
     : '';
 
   contenido.innerHTML = `
@@ -360,7 +366,7 @@ window.abrirPanel = function(marca) {
     <p class="descripcion">${marca.descripcion || '<em>Sin descripción</em>'}</p>
     ${fotosHTML}
     ${marca.autor ? `<p class="autor">✍️ ${marca.autor}</p>` : ''}
-    ${btnBorrar}
+    ${btnsAccion}
   `;
 
   document.getElementById('panel').classList.remove('oculto');
@@ -368,6 +374,123 @@ window.abrirPanel = function(marca) {
 
 window.cerrarPanel = function() {
   document.getElementById('panel').classList.add('oculto');
+  marcaAbierta = null;
+};
+
+// ══════════════════════════════
+//  MODAL EDICIÓN
+// ══════════════════════════════
+
+let fotosExistentes = [];
+
+window.abrirModalEdicion = function() {
+  const marca = marcaAbierta;
+  if (!marca) return;
+
+  fotosExistentes = [...(marca.fotos || [])];
+
+  document.getElementById('edit-nombre').value = marca.nombre;
+  document.getElementById('edit-descripcion').value = marca.descripcion || '';
+  document.getElementById('edit-fotos-nuevas').value = '';
+  document.getElementById('edit-preview-nuevas').innerHTML = '';
+  document.getElementById('edit-progreso-caja').classList.add('oculto');
+  document.getElementById('edit-progreso-barra').style.width = '0%';
+
+  renderizarFotosExistentes();
+  document.getElementById('modal-edicion').classList.remove('oculto');
+};
+
+function renderizarFotosExistentes() {
+  const container = document.getElementById('edit-fotos-existentes');
+  if (fotosExistentes.length === 0) {
+    container.innerHTML = '<p style="color:#555;font-size:0.82rem;margin-top:4px;">Sin fotos</p>';
+    return;
+  }
+  container.innerHTML = fotosExistentes.map((url, i) => `
+    <div class="foto-existente">
+      <img src="${url}" />
+      <button class="btn-quitar-foto" onclick="quitarFotoExistente(${i})">✕</button>
+    </div>
+  `).join('');
+}
+
+window.quitarFotoExistente = function(indice) {
+  fotosExistentes.splice(indice, 1);
+  renderizarFotosExistentes();
+};
+
+window.cerrarModalEdicion = function() {
+  document.getElementById('modal-edicion').classList.add('oculto');
+  fotosExistentes = [];
+};
+
+document.getElementById('edit-fotos-nuevas').addEventListener('change', function() {
+  const preview = document.getElementById('edit-preview-nuevas');
+  preview.innerHTML = '';
+  Array.from(this.files).forEach(file => {
+    const img = document.createElement('img');
+    img.src = URL.createObjectURL(file);
+    preview.appendChild(img);
+  });
+});
+
+window.guardarEdicion = async function() {
+  const nombre         = document.getElementById('edit-nombre').value.trim();
+  const descripcion    = document.getElementById('edit-descripcion').value.trim();
+  const archivosNuevos = document.getElementById('edit-fotos-nuevas').files;
+  const btnGuardar     = document.getElementById('btn-guardar-edicion');
+
+  if (!nombre)        { alert('Escribe un nombre para el lugar.'); return; }
+  if (!usuarioActual) { alert('Debes iniciar sesión.'); return; }
+
+  btnGuardar.disabled = true;
+  btnGuardar.textContent = 'Guardando...';
+
+  try {
+    const urlsFotosNuevas = [];
+
+    if (archivosNuevos.length > 0) {
+      document.getElementById('edit-progreso-caja').classList.remove('oculto');
+
+      for (let i = 0; i < archivosNuevos.length; i++) {
+        const url = await subirFotoCloudinary(
+          archivosNuevos[i], i, archivosNuevos.length,
+          'edit-progreso-barra', 'edit-progreso-texto'
+        );
+        urlsFotosNuevas.push(url);
+      }
+
+      document.getElementById('edit-progreso-barra').style.width = '100%';
+      document.getElementById('edit-progreso-texto').textContent = 'Fotos subidas ✓';
+    }
+
+    const todasLasFotos = [...fotosExistentes, ...urlsFotosNuevas];
+
+    await updateDoc(doc(db, 'pins', marcaAbierta.id), {
+      nombre,
+      descripcion,
+      fotos: todasLasFotos,
+    });
+
+    // Actualizar objeto local y refrescar panel
+    marcaAbierta.nombre      = nombre;
+    marcaAbierta.descripcion = descripcion;
+    marcaAbierta.fotos       = todasLasFotos;
+
+    cerrarModalEdicion();
+    abrirPanel(marcaAbierta);
+
+  } catch (err) {
+    console.error('Error al editar:', err);
+    if (err.code === 'permission-denied') {
+      alert('No tienes permiso para editar esta marca.');
+    } else {
+      alert('Error al guardar. Abre la consola (F12) para ver el detalle.');
+    }
+  } finally {
+    btnGuardar.disabled = false;
+    btnGuardar.textContent = '💾 Guardar cambios';
+  }
 };
 
 // ══════════════════════════════

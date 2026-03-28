@@ -42,8 +42,8 @@
     <div id="modal-caja">
       <h2>📌 Nueva marca</h2>
 
-      <label>Nombre del lugar *</label>
-      <input type="text" id="input-nombre" placeholder="Ej: Nebulosa de los Caídos" />
+      <label>Nombre *</label>
+      <input type="text" id="input-nombre" placeholder="Escribe lo que quieras..." />
 
       <label>Descripción</label>
       <textarea id="input-descripcion" placeholder="Escribe lo que quieras..."></textarea>
@@ -57,8 +57,36 @@
         <span id="progreso-texto">Subiendo fotos...</span>
       </div>
 
-      <button id="btn-guardar" onclick="guardarPin()">💾 Guardar marca</button>
+      <button id="btn-guardar" onclick="guardarPin()">💾 Guardar</button>
       <button class="btn-secundario" onclick="cerrarModal()">Cancelar</button>
+    </div>
+  </div>
+
+  <!-- Modal edición marca -->
+  <div id="modal-edicion" class="oculto">
+    <div id="modal-edicion-caja">
+      <h2>✏️ Editar</h2>
+
+      <label>Nombre *</label>
+      <input type="text" id="edit-nombre" placeholder="Escribe lo que quieras..." />
+
+      <label>Descripción</label>
+      <textarea id="edit-descripcion" placeholder="Escribe lo que quieras..."></textarea>
+
+      <label>Fotos actuales</label>
+      <div id="edit-fotos-existentes"></div>
+
+      <label>Añadir nuevas fotos</label>
+      <input type="file" id="edit-fotos-nuevas" accept="image/*" multiple />
+      <div id="edit-preview-nuevas"></div>
+
+      <div id="edit-progreso-caja" class="oculto">
+        <div id="edit-progreso-barra"></div>
+        <span id="edit-progreso-texto">Subiendo fotos...</span>
+      </div>
+
+      <button id="btn-guardar-edicion" onclick="guardarEdicion()">💾 Guardar cambios</button>
+      <button class="btn-secundario" onclick="cerrarModalEdicion()">Cancelar</button>
     </div>
   </div>
 

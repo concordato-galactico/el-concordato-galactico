@@ -111,8 +111,28 @@ body {
 }
 .fotos-grid img:hover { transform: scale(1.01); }
 
-/* ── BOTÓN BORRAR MARCA ── */
+/* ── BOTONES DE ACCIÓN (EDITAR + BORRAR) ── */
+.btns-accion {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.btn-editar {
+  flex: 1;
+  background: transparent;
+  border: 1px solid #4285F4;
+  color: #4285F4;
+  padding: 9px;
+  border-radius: 9px;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s;
+}
+.btn-editar:hover { background: #4285F4; color: #fff; }
+
 .btn-borrar {
+  flex: 1;
   background: transparent;
   border: 1px solid #e94560;
   color: #e94560;
@@ -120,8 +140,7 @@ body {
   border-radius: 9px;
   font-size: 0.88rem;
   cursor: pointer;
-  margin-top: 16px;
-  width: 100%;
+  transition: background 0.18s, color 0.18s;
 }
 .btn-borrar:hover { background: #e94560; color: #fff; }
 
@@ -161,7 +180,7 @@ body {
   cursor: pointer; font-size: 0.85rem;
 }
 
-/* ── MODAL ── */
+/* ── MODAL NUEVA MARCA ── */
 #modal {
   position: fixed; inset: 0;
   background: rgba(0,0,0,0.72);
@@ -220,6 +239,97 @@ body {
   margin-top: 8px; width: 100%;
 }
 .btn-secundario:hover { border-color: #555; color: #aaa; }
+
+/* ── MODAL EDICIÓN MARCA ── */
+#modal-edicion {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.72);
+  z-index: 2000; display: flex;
+  align-items: center; justify-content: center;
+}
+
+#modal-edicion-caja {
+  background: #16213e;
+  border: 2px solid #4285F4;
+  border-radius: 14px; padding: 28px;
+  width: 90%; max-width: 460px;
+  max-height: 88vh; overflow-y: auto;
+}
+
+#modal-edicion-caja h2 { color: #4285F4; margin-bottom: 18px; font-size: 1.3rem; }
+
+#modal-edicion-caja label {
+  display: block; margin: 12px 0 5px;
+  color: #999; font-size: 0.85rem;
+}
+
+#modal-edicion-caja input[type="text"],
+#modal-edicion-caja textarea {
+  width: 100%; background: #0f3460;
+  border: 1px solid #1a4a8a; border-radius: 7px;
+  color: #fff; padding: 9px 11px;
+  font-size: 0.92rem; outline: none;
+}
+#modal-edicion-caja textarea { height: 90px; resize: vertical; }
+#modal-edicion-caja input[type="file"] { margin-top: 4px; color: #888; font-size: 0.85rem; }
+
+/* ── FOTOS EXISTENTES (edición) ── */
+#edit-fotos-existentes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 5px;
+}
+
+.foto-existente {
+  position: relative;
+  width: 65px;
+  height: 65px;
+}
+
+.foto-existente img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 5px;
+}
+
+.btn-quitar-foto {
+  position: absolute;
+  top: -5px; right: -5px;
+  background: #e94560;
+  border: none;
+  color: #fff;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  font-size: 9px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  line-height: 1;
+}
+.btn-quitar-foto:hover { background: #c73652; }
+
+#edit-preview-nuevas { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 9px; }
+#edit-preview-nuevas img { width: 65px; height: 65px; object-fit: cover; border-radius: 5px; }
+
+#edit-progreso-caja {
+  margin-top: 12px; background: #0f3460;
+  border-radius: 8px; overflow: hidden;
+}
+#edit-progreso-barra { height: 7px; background: #4285F4; width: 0%; transition: width 0.3s; }
+#edit-progreso-texto { display: block; text-align: center; font-size: 0.78rem; color: #888; padding: 5px; }
+
+#btn-guardar-edicion {
+  background: #4285F4; color: #fff; border: none;
+  padding: 12px; border-radius: 9px;
+  font-size: 0.95rem; font-weight: bold;
+  cursor: pointer; margin-top: 18px; width: 100%;
+}
+#btn-guardar-edicion:hover { background: #3367d6; }
+#btn-guardar-edicion:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* ── LIGHTBOX ── */
 #lightbox {
