@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>El Concordato Galáctico</title>
+
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div id="map"></div>
+
+  <!-- Barra de sesión -->
+  <div id="barra-sesion">
+    <span id="info-usuario">Cargando...</span>
+    <button id="btn-login"  onclick="loginGoogle()"  class="oculto">🔑 Iniciar sesión con Google</button>
+    <button id="btn-logout" onclick="logoutGoogle()" class="oculto">Cerrar sesión</button>
+  </div>
+
+  <!-- Panel lateral -->
+  <div id="panel" class="oculto">
+    <button class="btn-cerrar" onclick="cerrarPanel()">✕</button>
+    <div id="panel-contenido"></div>
+  </div>
+
+  <!-- Botón añadir pin -->
+  <button id="btn-añadir" class="oculto" onclick="activarModoPin()">📌 Añadir pin</button>
+
+  <!-- Instrucción modo pin -->
+  <div id="instruccion" class="oculto">
+    Haz clic en el mapa para colocar el pin
+    <button onclick="cancelarModoPin()">Cancelar</button>
+  </div>
+
+  <!-- Modal nuevo pin -->
+  <div id="modal" class="oculto">
+    <div id="modal-caja">
+      <h2>📌 Nuevo pin</h2>
+
+      <label>Nombre del lugar *</label>
+      <input type="text" id="input-nombre" placeholder="Ej: Nebulosa de los Caídos" />
+
+      <label>Descripción</label>
+      <textarea id="input-descripcion" placeholder="Escribe lo que quieras..."></textarea>
+
+      <label>Fotos (puedes elegir varias)</label>
+      <input type="file" id="input-fotos" accept="image/*" multiple />
+      <div id="preview-fotos"></div>
+
+      <div id="progreso-caja" class="oculto">
+        <div id="progreso-barra"></div>
+        <span id="progreso-texto">Subiendo fotos...</span>
+      </div>
+
+      <button id="btn-guardar" onclick="guardarPin()">💾 Guardar pin</button>
+      <button class="btn-secundario" onclick="cerrarModal()">Cancelar</button>
+    </div>
+  </div>
+
+  <script type="module" src="app.js"></script>
+
+</body>
+</html>

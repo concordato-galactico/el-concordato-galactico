@@ -1,0 +1,228 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  background: #111;
+  color: #eee;
+  overflow: hidden;
+}
+
+.oculto { display: none !important; }
+
+/* ── MAPA ── */
+#map {
+  width: 100vw;
+  height: 100vh;
+  background: #1a1a2e;
+}
+
+/* ── BARRA DE SESIÓN ── */
+#barra-sesion {
+  position: fixed;
+  top: 12px; left: 12px;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(22, 33, 62, 0.92);
+  border: 1px solid #0f3460;
+  border-radius: 22px;
+  padding: 7px 16px;
+  backdrop-filter: blur(6px);
+}
+
+#info-usuario { font-size: 0.82rem; color: #aaa; }
+
+#btn-login {
+  background: #4285F4;
+  color: white;
+  border: none;
+  padding: 7px 15px;
+  border-radius: 16px;
+  font-size: 0.82rem;
+  cursor: pointer;
+  font-weight: bold;
+}
+#btn-login:hover { background: #3367d6; }
+
+#btn-logout {
+  background: transparent;
+  border: 1px solid #444;
+  color: #888;
+  padding: 5px 12px;
+  border-radius: 14px;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+#btn-logout:hover { border-color: #e94560; color: #e94560; }
+
+/* ── PANEL LATERAL ── */
+#panel {
+  position: fixed;
+  top: 0; right: 0;
+  width: 370px;
+  height: 100vh;
+  background: #16213e;
+  border-left: 2px solid #0f3460;
+  overflow-y: auto;
+  z-index: 1000;
+  padding: 50px 20px 20px;
+  animation: slideIn 0.25s ease;
+}
+
+@keyframes slideIn {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+
+.btn-cerrar {
+  position: absolute;
+  top: 14px; right: 14px;
+  background: #0f3460;
+  border: none;
+  color: #fff;
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  font-size: 15px;
+  cursor: pointer;
+}
+.btn-cerrar:hover { background: #e94560; }
+
+#panel-contenido h2 { font-size: 1.4rem; color: #e94560; margin-bottom: 10px; }
+#panel-contenido .descripcion { color: #bbb; line-height: 1.6; margin-bottom: 15px; }
+#panel-contenido .fecha { font-size: 0.78rem; color: #555; margin-bottom: 8px; }
+#panel-contenido .autor { font-size: 0.8rem; color: #4285F4; margin-bottom: 15px; }
+
+.fotos-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+  margin-top: 10px;
+}
+.fotos-grid img {
+  width: 100%; aspect-ratio: 1;
+  object-fit: cover; border-radius: 7px;
+  cursor: pointer; transition: transform 0.15s;
+}
+.fotos-grid img:hover { transform: scale(1.04); }
+
+/* ── BOTÓN AÑADIR PIN ── */
+#btn-añadir {
+  position: fixed;
+  bottom: 28px; left: 50%;
+  transform: translateX(-50%);
+  background: #e94560;
+  color: #fff; border: none;
+  padding: 13px 28px; border-radius: 30px;
+  font-size: 0.95rem; font-weight: bold;
+  cursor: pointer; z-index: 1000;
+  box-shadow: 0 4px 18px rgba(233,69,96,0.45);
+  transition: all 0.2s;
+}
+#btn-añadir:hover {
+  background: #c73652;
+  transform: translateX(-50%) scale(1.05);
+}
+
+/* ── INSTRUCCIÓN ── */
+#instruccion {
+  position: fixed;
+  top: 18px; left: 50%;
+  transform: translateX(-50%);
+  background: #0f3460; color: #fff;
+  padding: 11px 22px; border-radius: 20px;
+  z-index: 1000; display: flex;
+  align-items: center; gap: 14px;
+  font-size: 0.9rem;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.4);
+}
+#instruccion button {
+  background: #e94560; border: none; color: #fff;
+  padding: 5px 13px; border-radius: 13px;
+  cursor: pointer; font-size: 0.85rem;
+}
+
+/* ── MODAL ── */
+#modal {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.72);
+  z-index: 2000; display: flex;
+  align-items: center; justify-content: center;
+}
+
+#modal-caja {
+  background: #16213e;
+  border: 2px solid #0f3460;
+  border-radius: 14px; padding: 28px;
+  width: 90%; max-width: 460px;
+  max-height: 88vh; overflow-y: auto;
+}
+
+#modal-caja h2 { color: #e94560; margin-bottom: 18px; font-size: 1.3rem; }
+
+#modal-caja label {
+  display: block; margin: 12px 0 5px;
+  color: #999; font-size: 0.85rem;
+}
+
+#modal-caja input[type="text"],
+#modal-caja textarea {
+  width: 100%; background: #0f3460;
+  border: 1px solid #1a4a8a; border-radius: 7px;
+  color: #fff; padding: 9px 11px;
+  font-size: 0.92rem; outline: none;
+}
+#modal-caja textarea { height: 90px; resize: vertical; }
+#modal-caja input[type="file"] { margin-top: 4px; color: #888; font-size: 0.85rem; }
+
+#preview-fotos { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 9px; }
+#preview-fotos img { width: 65px; height: 65px; object-fit: cover; border-radius: 5px; }
+
+#progreso-caja {
+  margin-top: 12px; background: #0f3460;
+  border-radius: 8px; overflow: hidden;
+}
+#progreso-barra { height: 7px; background: #e94560; width: 0%; transition: width 0.3s; }
+#progreso-texto { display: block; text-align: center; font-size: 0.78rem; color: #888; padding: 5px; }
+
+#btn-guardar {
+  background: #e94560; color: #fff; border: none;
+  padding: 12px; border-radius: 9px;
+  font-size: 0.95rem; font-weight: bold;
+  cursor: pointer; margin-top: 18px; width: 100%;
+}
+#btn-guardar:hover { background: #c73652; }
+#btn-guardar:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-secundario {
+  background: transparent; border: 1px solid #333;
+  color: #888; padding: 9px; border-radius: 9px;
+  font-size: 0.88rem; cursor: pointer;
+  margin-top: 8px; width: 100%;
+}
+.btn-secundario:hover { border-color: #555; color: #aaa; }
+
+/* ── LIGHTBOX ── */
+#lightbox {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.93);
+  z-index: 3000; display: flex;
+  align-items: center; justify-content: center;
+  cursor: zoom-out;
+}
+#lightbox img { max-width: 90vw; max-height: 90vh; border-radius: 7px; }
+#lightbox-cerrar {
+  position: absolute; top: 18px; right: 18px;
+  background: #e94560; border: none; color: #fff;
+  width: 38px; height: 38px; border-radius: 50%;
+  font-size: 17px; cursor: pointer;
+}
+
+/* ── CONTROL DE CAPAS ── */
+.leaflet-control-layers {
+  background: #16213e !important;
+  border: 1px solid #0f3460 !important;
+  border-radius: 10px !important;
+}
+.leaflet-control-layers-toggle { background-color: #e94560 !important; }
+.leaflet-control-layers label { color: #ddd !important; font-size: 0.88rem; }
