@@ -74,22 +74,17 @@ body {
   max-width: 860px;
 }
 
-/* Wrapper interior que scrollea */
 #panel-scroll {
   height: 100%;
   max-height: calc(100vh - 110px);
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 50px 20px 24px;
+  padding: 16px 20px 24px;
   box-sizing: border-box;
-  /* Scrollbar pegada al borde interior derecho */
   padding-right: 12px;
 }
 
-/* Scrollbar elegante */
-#panel-scroll::-webkit-scrollbar {
-  width: 4px;
-}
+#panel-scroll::-webkit-scrollbar { width: 4px; }
 #panel-scroll::-webkit-scrollbar-track {
   background: rgba(15, 52, 96, 0.3);
   border-radius: 0 14px 14px 0;
@@ -98,17 +93,9 @@ body {
 #panel-scroll::-webkit-scrollbar-thumb {
   background: #4285F4;
   border-radius: 10px;
-  opacity: 0.7;
 }
-#panel-scroll::-webkit-scrollbar-thumb:hover {
-  background: #6aa3f8;
-}
-
-/* Firefox */
-#panel-scroll {
-  scrollbar-width: thin;
-  scrollbar-color: #4285F4 transparent;
-}
+#panel-scroll::-webkit-scrollbar-thumb:hover { background: #6aa3f8; }
+#panel-scroll { scrollbar-width: thin; scrollbar-color: #4285F4 transparent; }
 
 @keyframes fadeIn {
   from { opacity: 0; transform: scale(0.97); }
@@ -163,16 +150,17 @@ body {
 }
 .btn-cerrar:hover { background: #e94560; }
 
-#panel-contenido h2 { font-size: 1.4rem; color: #e94560; margin-bottom: 10px; }
+#panel-contenido h2 { font-size: 1.4rem; color: #ffffff; margin-bottom: 6px; padding-right: 40px; }
+#panel-contenido .categoria { font-size: 0.82rem; color: #4285F4; margin-bottom: 12px; letter-spacing: 0.03em; }
 #panel-contenido .descripcion {
   color: #bbb;
   line-height: 1.7;
   margin-bottom: 15px;
-  white-space: pre-wrap; /* respeta saltos de línea heredados */
+  white-space: pre-wrap;
   word-break: break-word;
 }
 #panel-contenido .fecha { font-size: 0.78rem; color: #555; margin-bottom: 8px; }
-#panel-contenido .autor { font-size: 0.8rem; color: #4285F4; margin-bottom: 15px; }
+#panel-contenido .autor { font-size: 0.8rem; color: #4285F4; margin-top: 20px; padding-top: 14px; border-top: 1px solid #0f3460; }
 
 .fotos-grid {
   display: flex;
@@ -185,7 +173,9 @@ body {
   object-fit: cover;
   border-radius: 7px;
   cursor: pointer;
+  transition: transform 0.15s;
 }
+.fotos-grid img:hover { transform: scale(1.01); }
 
 /* ── BOTONES DE ACCIÓN ── */
 .btns-accion {
@@ -374,6 +364,13 @@ body {
   color: #fff; padding: 9px 11px;
   font-size: 0.92rem; outline: none;
 }
+#modal-caja select {
+  width: 100%; background: #0f3460;
+  border: 1px solid #1a4a8a; border-radius: 7px;
+  color: #fff; padding: 9px 11px;
+  font-size: 0.92rem; outline: none; cursor: pointer;
+}
+#modal-caja select option { background: #16213e; }
 #modal-caja input[type="file"] { margin-top: 4px; color: #888; font-size: 0.85rem; }
 
 #preview-fotos { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 9px; }
@@ -432,6 +429,13 @@ body {
   color: #fff; padding: 9px 11px;
   font-size: 0.92rem; outline: none;
 }
+#modal-edicion-caja select {
+  width: 100%; background: #0f3460;
+  border: 1px solid #1a4a8a; border-radius: 7px;
+  color: #fff; padding: 9px 11px;
+  font-size: 0.92rem; outline: none; cursor: pointer;
+}
+#modal-edicion-caja select option { background: #16213e; }
 #modal-edicion-caja input[type="file"] { margin-top: 4px; color: #888; font-size: 0.85rem; }
 
 /* ── FOTOS EXISTENTES (edición) ── */

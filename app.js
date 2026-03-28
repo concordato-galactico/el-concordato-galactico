@@ -217,36 +217,15 @@ mapa.on('click', function(e) {
 
 window.formatText = function(cmd) {
   document.execCommand(cmd, false, null);
-  actualizarBotonesFormato();
 };
 
 window.formatSize = function(selectEl) {
   const val = selectEl.value;
   if (!val) return;
   document.execCommand('fontSize', false, val);
+  // Restablecer el select visualmente
   setTimeout(() => { selectEl.value = ''; }, 100);
 };
-
-function actualizarBotonesFormato() {
-  const comandos = { bold: 'bold', italic: 'italic', underline: 'underline' };
-  document.querySelectorAll('.editor-toolbar button').forEach(btn => {
-    const onclick = btn.getAttribute('onclick') || '';
-    for (const [cmd, label] of Object.entries(comandos)) {
-      if (onclick.includes(`'${cmd}'`)) {
-        const activo = document.queryCommandState(cmd);
-        btn.classList.toggle('btn-formato-activo', activo);
-      }
-    }
-  });
-}
-
-document.addEventListener('selectionchange', () => {
-  // Solo actualizar si el foco está en algún editor
-  const activo = document.activeElement;
-  if (activo && activo.classList.contains('editor-content')) {
-    actualizarBotonesFormato();
-  }
-});
 
 // ══════════════════════════════
 //  MODAL NUEVA MARCA
@@ -255,6 +234,7 @@ document.addEventListener('selectionchange', () => {
 window.abrirModal = function() {
   document.getElementById('modal').classList.remove('oculto');
   document.getElementById('input-nombre').value = '';
+  document.getElementById('input-categoria').value = 'Sistema';
   document.getElementById('input-descripcion-editor').innerHTML = '';
   document.getElementById('input-fotos').value = '';
   document.getElementById('preview-fotos').innerHTML = '';
@@ -302,6 +282,7 @@ async function subirFotoCloudinary(archivo, indice, total, barraId = 'progreso-b
 
 window.guardarPin = async function() {
   const nombre      = document.getElementById('input-nombre').value.trim();
+  const categoria   = document.getElementById('input-categoria').value;
   const descripcion = document.getElementById('input-descripcion-editor').innerHTML.trim();
   const archivos    = document.getElementById('input-fotos').files;
   const btnGuardar  = document.getElementById('btn-guardar');
@@ -324,7 +305,7 @@ window.guardarPin = async function() {
     }
 
     await addDoc(pinsCol, {
-      nombre, descripcion,
+      nombre, categoria, descripcion,
       lat: coordsNuevoPin.lat, lng: coordsNuevoPin.lng,
       fotos: urlsFotos,
       autor: usuarioActual.displayName || usuarioActual.email,
@@ -388,6 +369,7 @@ window.abrirPanel = function(marca) {
 
   contenido.innerHTML = `
     <h2>${marca.nombre}</h2>
+    ${marca.categoria ? `<p class="categoria">📂 ${marca.categoria}</p>` : ''}
     <div class="descripcion">${descHTML || '<em>Sin descripción</em>'}</div>
     ${fotosHTML}
     ${marca.autor ? `<p class="autor">✍️ ${marca.autor}</p>` : ''}
@@ -415,6 +397,7 @@ window.abrirModalEdicion = function() {
   fotosExistentes = [...(marca.fotos || [])];
 
   document.getElementById('edit-nombre').value = marca.nombre;
+  document.getElementById('edit-categoria').value = marca.categoria || 'Sistema';
 
   // Cargar HTML rico (o convertir texto plano legacy)
   const desc = marca.descripcion || '';
@@ -466,6 +449,7 @@ document.getElementById('edit-fotos-nuevas').addEventListener('change', function
 
 window.guardarEdicion = async function() {
   const nombre         = document.getElementById('edit-nombre').value.trim();
+  const categoria      = document.getElementById('edit-categoria').value;
   const descripcion    = document.getElementById('edit-descripcion-editor').innerHTML.trim();
   const archivosNuevos = document.getElementById('edit-fotos-nuevas').files;
   const btnGuardar     = document.getElementById('btn-guardar-edicion');
@@ -492,10 +476,10 @@ window.guardarEdicion = async function() {
 
     const todasLasFotos = [...fotosExistentes, ...urlsFotosNuevas];
 
-    await updateDoc(doc(db, 'pins', marcaAbierta.id), { nombre, descripcion, fotos: todasLasFotos });
+    await updateDoc(doc(db, 'pins', marcaAbierta.id), { nombre, categoria, descripcion, fotos: todasLasFotos });
 
-    // Actualizar objeto local — el listener onSnapshot(modified) actualizará el tooltip
     marcaAbierta.nombre      = nombre;
+    marcaAbierta.categoria   = categoria;
     marcaAbierta.descripcion = descripcion;
     marcaAbierta.fotos       = todasLasFotos;
 

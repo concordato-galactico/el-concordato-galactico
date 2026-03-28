@@ -27,7 +27,6 @@
     <div id="panel-scroll">
       <div id="panel-contenido"></div>
     </div>
-    <!-- Asa de redimensión -->
     <div id="panel-resize-handle" title="Arrastrar para redimensionar"></div>
   </div>
 
@@ -45,8 +44,18 @@
     <div id="modal-caja">
       <h2>📌 Nueva marca</h2>
 
-      <label>Nombre del lugar *</label>
+      <label>Título *</label>
       <input type="text" id="input-nombre" placeholder="Ej: Nebulosa de los Caídos" />
+
+      <label>Categoría *</label>
+      <select id="input-categoria">
+        <option value="Sistema">Sistema</option>
+        <option value="Planeta">Planeta</option>
+        <option value="Estrella">Estrella</option>
+        <option value="Agujero Negro">Agujero Negro</option>
+        <option value="Puerto Espacial">Puerto Espacial</option>
+        <option value="Nave">Nave</option>
+      </select>
 
       <label>Descripción</label>
       <div class="editor-toolbar">
@@ -84,8 +93,18 @@
     <div id="modal-edicion-caja">
       <h2>✏️ Editar marca</h2>
 
-      <label>Nombre del lugar *</label>
+      <label>Título *</label>
       <input type="text" id="edit-nombre" placeholder="Ej: Nebulosa de los Caídos" />
+
+      <label>Categoría *</label>
+      <select id="edit-categoria">
+        <option value="Sistema">Sistema</option>
+        <option value="Planeta">Planeta</option>
+        <option value="Estrella">Estrella</option>
+        <option value="Agujero Negro">Agujero Negro</option>
+        <option value="Puerto Espacial">Puerto Espacial</option>
+        <option value="Nave">Nave</option>
+      </select>
 
       <label>Descripción</label>
       <div class="editor-toolbar">
