@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>El Concordato Galáctico</title>
 
-  <!-- Leaflet -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
@@ -26,6 +25,8 @@
   <div id="panel" class="oculto">
     <button class="btn-cerrar" onclick="cerrarPanel()">✕</button>
     <div id="panel-contenido"></div>
+    <!-- Asa de redimensión -->
+    <div id="panel-resize-handle" title="Arrastrar para redimensionar"></div>
   </div>
 
   <!-- Botón añadir marca -->
@@ -42,11 +43,25 @@
     <div id="modal-caja">
       <h2>📌 Nueva marca</h2>
 
-      <label>Nombre *</label>
+      <label>Título *</label>
       <input type="text" id="input-nombre" placeholder="Escribe lo que quieras..." />
 
       <label>Descripción</label>
-      <textarea id="input-descripcion" placeholder="Escribe lo que quieras..."></textarea>
+      <div class="editor-toolbar">
+        <button type="button" onclick="formatText('bold')"      title="Negrita"><b>N</b></button>
+        <button type="button" onclick="formatText('italic')"    title="Cursiva"><i>C</i></button>
+        <button type="button" onclick="formatText('underline')" title="Subrayado"><u>S</u></button>
+        <div class="toolbar-sep"></div>
+        <select onchange="formatSize(this)" title="Tamaño de texto">
+          <option value="">Tamaño</option>
+          <option value="1">Pequeño</option>
+          <option value="3">Normal</option>
+          <option value="5">Grande</option>
+          <option value="7">Muy grande</option>
+        </select>
+      </div>
+      <div id="input-descripcion-editor" class="editor-content" contenteditable="true"
+           data-placeholder="Escribe lo que quieras..."></div>
 
       <label>Fotos (puedes elegir varias)</label>
       <input type="file" id="input-fotos" accept="image/*" multiple />
@@ -65,13 +80,27 @@
   <!-- Modal edición marca -->
   <div id="modal-edicion" class="oculto">
     <div id="modal-edicion-caja">
-      <h2>✏️ Editar</h2>
+      <h2>✏️ Editar marca</h2>
 
-      <label>Nombre *</label>
+      <label>Título *</label>
       <input type="text" id="edit-nombre" placeholder="Escribe lo que quieras..." />
 
       <label>Descripción</label>
-      <textarea id="edit-descripcion" placeholder="Escribe lo que quieras..."></textarea>
+      <div class="editor-toolbar">
+        <button type="button" onclick="formatText('bold')"      title="Negrita"><b>N</b></button>
+        <button type="button" onclick="formatText('italic')"    title="Cursiva"><i>C</i></button>
+        <button type="button" onclick="formatText('underline')" title="Subrayado"><u>S</u></button>
+        <div class="toolbar-sep"></div>
+        <select onchange="formatSize(this)" title="Tamaño de texto">
+          <option value="">Tamaño</option>
+          <option value="1">Pequeño</option>
+          <option value="3">Normal</option>
+          <option value="5">Grande</option>
+          <option value="7">Muy grande</option>
+        </select>
+      </div>
+      <div id="edit-descripcion-editor" class="editor-content" contenteditable="true"
+           data-placeholder="Escribe lo que quieras..."></div>
 
       <label>Fotos actuales</label>
       <div id="edit-fotos-existentes"></div>

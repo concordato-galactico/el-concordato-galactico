@@ -67,16 +67,55 @@ body {
   border: 2px solid #0f3460;
   border-radius: 16px;
   overflow-y: auto;
+  overflow-x: hidden;
   z-index: 1000;
   padding: 50px 20px 24px;
   animation: fadeIn 0.2s ease;
   box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+  /* Necesario para que el resize handle se posicione bien */
+  min-width: 260px;
+  max-width: 860px;
 }
 
 @keyframes fadeIn {
   from { opacity: 0; transform: scale(0.97); }
   to   { opacity: 1; transform: scale(1); }
 }
+
+/* ── ASA DE REDIMENSIÓN ── */
+#panel-resize-handle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 8px;
+  height: 100%;
+  cursor: ew-resize;
+  border-radius: 0 16px 16px 0;
+  background: transparent;
+  transition: background 0.2s;
+  z-index: 10;
+}
+
+#panel-resize-handle:hover,
+#panel-resize-handle:active {
+  background: rgba(66, 133, 244, 0.25);
+}
+
+/* Pequeña línea visual indicativa */
+#panel-resize-handle::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 2px;
+  height: 32px;
+  background: rgba(66, 133, 244, 0.4);
+  border-radius: 2px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+#panel-resize-handle:hover::after { opacity: 1; }
 
 .btn-cerrar {
   position: absolute;
@@ -92,7 +131,13 @@ body {
 .btn-cerrar:hover { background: #e94560; }
 
 #panel-contenido h2 { font-size: 1.4rem; color: #e94560; margin-bottom: 10px; }
-#panel-contenido .descripcion { color: #bbb; line-height: 1.6; margin-bottom: 15px; }
+#panel-contenido .descripcion {
+  color: #bbb;
+  line-height: 1.7;
+  margin-bottom: 15px;
+  white-space: pre-wrap; /* respeta saltos de línea heredados */
+  word-break: break-word;
+}
 #panel-contenido .fecha { font-size: 0.78rem; color: #555; margin-bottom: 8px; }
 #panel-contenido .autor { font-size: 0.8rem; color: #4285F4; margin-bottom: 15px; }
 
@@ -111,7 +156,7 @@ body {
 }
 .fotos-grid img:hover { transform: scale(1.01); }
 
-/* ── BOTONES DE ACCIÓN (EDITAR + BORRAR) ── */
+/* ── BOTONES DE ACCIÓN ── */
 .btns-accion {
   display: flex;
   gap: 8px;
@@ -148,7 +193,6 @@ body {
 #btn-añadir {
   position: fixed;
   bottom: 78px; right: 12px;
-  transform: none;
   background: #e94560;
   color: #fff; border: none;
   padding: 13px 28px; border-radius: 30px;
@@ -157,10 +201,7 @@ body {
   box-shadow: 0 4px 18px rgba(233,69,96,0.45);
   transition: all 0.2s;
 }
-#btn-añadir:hover {
-  background: #c73652;
-  transform: scale(1.05);
-}
+#btn-añadir:hover { background: #c73652; transform: scale(1.05); }
 
 /* ── INSTRUCCIÓN ── */
 #instruccion {
@@ -179,6 +220,99 @@ body {
   padding: 5px 13px; border-radius: 13px;
   cursor: pointer; font-size: 0.85rem;
 }
+
+/* ── EDITOR DE TEXTO ENRIQUECIDO ── */
+.editor-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #0a2240;
+  border: 1px solid #1a4a8a;
+  border-bottom: none;
+  border-radius: 7px 7px 0 0;
+  padding: 5px 8px;
+  flex-wrap: wrap;
+}
+
+.editor-toolbar button {
+  background: transparent;
+  border: 1px solid transparent;
+  color: #bbb;
+  width: 28px; height: 26px;
+  border-radius: 5px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  padding: 0;
+  flex-shrink: 0;
+}
+.editor-toolbar button:hover {
+  background: #1a4a8a;
+  border-color: #4285F4;
+  color: #fff;
+}
+
+.toolbar-sep {
+  width: 1px;
+  height: 18px;
+  background: #1a4a8a;
+  margin: 0 4px;
+  flex-shrink: 0;
+}
+
+.editor-toolbar select {
+  background: transparent;
+  border: 1px solid transparent;
+  color: #bbb;
+  font-size: 0.78rem;
+  border-radius: 5px;
+  padding: 2px 4px;
+  cursor: pointer;
+  outline: none;
+  transition: background 0.15s, border-color 0.15s;
+}
+.editor-toolbar select:hover,
+.editor-toolbar select:focus {
+  background: #1a4a8a;
+  border-color: #4285F4;
+  color: #fff;
+}
+.editor-toolbar select option {
+  background: #16213e;
+  color: #eee;
+}
+
+.editor-content {
+  width: 100%;
+  min-height: 90px;
+  background: #0f3460;
+  border: 1px solid #1a4a8a;
+  border-radius: 0 0 7px 7px;
+  color: #fff;
+  padding: 9px 11px;
+  font-size: 0.92rem;
+  outline: none;
+  line-height: 1.6;
+  word-break: break-word;
+  overflow-y: auto;
+  max-height: 200px;
+  /* Estilos internos del rich text */
+}
+
+/* Placeholder para contenteditable */
+.editor-content:empty::before {
+  content: attr(data-placeholder);
+  color: #555;
+  pointer-events: none;
+}
+
+/* Estilos que el execCommand genera dentro del editor */
+.editor-content b, .editor-content strong { font-weight: bold; }
+.editor-content i, .editor-content em     { font-style: italic; }
+.editor-content u                         { text-decoration: underline; }
 
 /* ── MODAL NUEVA MARCA ── */
 #modal {
@@ -203,14 +337,12 @@ body {
   color: #999; font-size: 0.85rem;
 }
 
-#modal-caja input[type="text"],
-#modal-caja textarea {
+#modal-caja input[type="text"] {
   width: 100%; background: #0f3460;
   border: 1px solid #1a4a8a; border-radius: 7px;
   color: #fff; padding: 9px 11px;
   font-size: 0.92rem; outline: none;
 }
-#modal-caja textarea { height: 90px; resize: vertical; }
 #modal-caja input[type="file"] { margin-top: 4px; color: #888; font-size: 0.85rem; }
 
 #preview-fotos { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 9px; }
@@ -263,14 +395,12 @@ body {
   color: #999; font-size: 0.85rem;
 }
 
-#modal-edicion-caja input[type="text"],
-#modal-edicion-caja textarea {
+#modal-edicion-caja input[type="text"] {
   width: 100%; background: #0f3460;
   border: 1px solid #1a4a8a; border-radius: 7px;
   color: #fff; padding: 9px 11px;
   font-size: 0.92rem; outline: none;
 }
-#modal-edicion-caja textarea { height: 90px; resize: vertical; }
 #modal-edicion-caja input[type="file"] { margin-top: 4px; color: #888; font-size: 0.85rem; }
 
 /* ── FOTOS EXISTENTES (edición) ── */
@@ -286,29 +416,18 @@ body {
   width: 65px;
   height: 65px;
 }
-
 .foto-existente img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 5px;
+  width: 100%; height: 100%;
+  object-fit: cover; border-radius: 5px;
 }
-
 .btn-quitar-foto {
   position: absolute;
   top: -5px; right: -5px;
-  background: #e94560;
-  border: none;
-  color: #fff;
-  width: 18px; height: 18px;
-  border-radius: 50%;
-  font-size: 9px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  line-height: 1;
+  background: #e94560; border: none; color: #fff;
+  width: 18px; height: 18px; border-radius: 50%;
+  font-size: 9px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0; line-height: 1;
 }
 .btn-quitar-foto:hover { background: #c73652; }
 
@@ -373,5 +492,5 @@ body {
   user-select: none;
 }
 .btn-capa:hover { border-color: #4285F4; color: #fff; }
-.btn-capa.activo { background: #0f3460; border-color: #4285F4; color: #fff; }
+.btn-capa.activo  { background: #0f3460; border-color: #4285F4; color: #fff; }
 .btn-capa.inactivo { opacity: 0.45; }
