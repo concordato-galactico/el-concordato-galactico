@@ -215,6 +215,15 @@ mapa.on('click', function(e) {
 //  EDITOR DE TEXTO ENRIQUECIDO
 // ══════════════════════════════
 
+// Editor activo antes de que el botón de toolbar robe el foco
+let editorActivo = null;
+
+document.addEventListener('focusin', (e) => {
+  if (e.target && e.target.classList.contains('editor-content')) {
+    editorActivo = e.target;
+  }
+});
+
 function actualizarToolbar(editorEl) {
   const toolbar = editorEl.previousElementSibling;
   if (!toolbar || !toolbar.classList.contains('editor-toolbar')) return;
@@ -223,30 +232,30 @@ function actualizarToolbar(editorEl) {
     const btn = toolbar.querySelector(`button[onclick="formatText('${cmd}')"]`);
     if (btn) btn.classList.toggle('activo', document.queryCommandState(cmd));
   });
-
-  const size = document.queryCommandValue('fontSize');
-  const sel  = toolbar.querySelector('select');
-  if (sel) sel.value = (size && size !== 'false') ? size : '';
 }
 
 window.formatText = function(cmd) {
+  // Devolver el foco al editor antes de ejecutar el comando
+  if (editorActivo) editorActivo.focus();
   document.execCommand(cmd, false, null);
-  const active = document.activeElement;
-  if (active && active.classList.contains('editor-content')) actualizarToolbar(active);
+  // Esperar un tick para que el navegador procese el cambio
+  setTimeout(() => {
+    if (editorActivo) actualizarToolbar(editorActivo);
+  }, 0);
 };
 
 window.formatSize = function(selectEl) {
   const val = selectEl.value;
   if (!val) return;
+  if (editorActivo) editorActivo.focus();
   document.execCommand('fontSize', false, val);
 };
 
 // Actualizar toolbar al mover el cursor o cambiar la selección
 document.addEventListener('selectionchange', () => {
-  const active = document.activeElement;
-  if (active && active.classList.contains('editor-content')) {
-    actualizarToolbar(active);
-  }
+  setTimeout(() => {
+    if (editorActivo) actualizarToolbar(editorActivo);
+  }, 0);
 });
 
 // ══════════════════════════════
