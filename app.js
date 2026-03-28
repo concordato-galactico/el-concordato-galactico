@@ -374,6 +374,13 @@ window.imgInlineAlign = function(btn, align) {
   const wrapper = btn.closest('.img-inline');
   wrapper.dataset.align   = align;
   wrapper.style.textAlign = align;
+  // Actualizar el margen de la imagen para que la alineación surta efecto
+  const img = wrapper.querySelector('img');
+  if (img) {
+    if      (align === 'left')   { img.style.margin = '0 auto 0 0'; }
+    else if (align === 'right')  { img.style.margin = '0 0 0 auto'; }
+    else                         { img.style.margin = '0 auto'; }
+  }
   wrapper.querySelectorAll('.iic-btn').forEach(b => {
     if (['⬅','⬌','➡'].includes(b.textContent.trim())) b.classList.remove('activo');
   });
@@ -401,7 +408,9 @@ function reinjectImgControls(editorEl) {
     if (img) {
       img.style.width  = size + '%';
       img.style.display = 'block';
-      img.style.margin  = '0 auto';
+      if      (align === 'left')  { img.style.margin = '0 auto 0 0'; }
+      else if (align === 'right') { img.style.margin = '0 0 0 auto'; }
+      else                        { img.style.margin = '0 auto'; }
     }
   });
 }
