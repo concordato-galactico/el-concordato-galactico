@@ -144,8 +144,9 @@ onSnapshot(pinsCol, (snapshot) => {
       if (tooltipsPorId[datos.id]) {
         tooltipsPorId[datos.id].setContent(datos.nombre);
       }
-      // Actualizar el handler de clic del marcador
+      // Actualizar icono y handler de clic del marcador
       if (markersPorId[datos.id]) {
+        markersPorId[datos.id].setIcon(iconoPorCategoria(datos.categoria));
         markersPorId[datos.id].off('click');
         markersPorId[datos.id].on('click', () => abrirPanel(datosPorId[datos.id]));
       }
@@ -159,16 +160,18 @@ onSnapshot(pinsCol, (snapshot) => {
   });
 });
 
-function añadirMarcaAlMapa(marca) {
-  const icono = L.divIcon({
-    className: '',
-    html: `<div style="
-      background:#e94560; width:16px; height:16px;
-      border-radius:50% 50% 50% 0; transform:rotate(-45deg);
-      border:2px solid #fff; box-shadow:0 2px 7px rgba(0,0,0,0.55);
-    "></div>`,
-    iconSize: [16, 16], iconAnchor: [8, 16],
+function iconoPorCategoria(categoria) {
+  const nombre = encodeURIComponent(categoria || 'Sistema');
+  return L.icon({
+    iconUrl:    `categorias/${nombre}.png`,
+    iconSize:   [40, 40],
+    iconAnchor: [20, 40],
+    popupAnchor:[0, -40],
   });
+}
+
+function añadirMarcaAlMapa(marca) {
+  const icono = iconoPorCategoria(marca.categoria);
 
   const marker = L.marker([marca.lat, marca.lng], { icon: icono });
   marker.on('click', () => abrirPanel(datosPorId[marca.id]));
