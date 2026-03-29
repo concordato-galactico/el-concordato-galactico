@@ -43,8 +43,9 @@ const mapa = L.map('map', {
 mapa.fitBounds(bounds);
 // — Capas de imagen (de abajo hacia arriba en el mapa) —
 const TILE_OPTS = {
-  tileSize: 256, minNativeZoom: 0, maxNativeZoom: 5,
+  tileSize: 256, minNativeZoom: 0, maxNativeZoom: 3,
   minZoom: -4, maxZoom: 3, noWrap: true, bounds: bounds,
+  tms: true,
   errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
 };
 const capaFisico     = L.tileLayer('Mapas/mapa-fisico/{z}/{x}/{y}.png',   { ...TILE_OPTS, zIndex: 100 }); // off por defecto
