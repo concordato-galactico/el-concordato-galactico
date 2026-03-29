@@ -165,8 +165,8 @@ function iconoPorCategoria(categoria) {
   return L.icon({
     iconUrl:    `categorias/${nombre}.png`,
     iconSize:   [40, 40],
-    iconAnchor: [20, 40],
-    popupAnchor:[0, -40],
+    iconAnchor: [20, 20],
+    popupAnchor:[0, -20],
   });
 }
 
@@ -178,7 +178,7 @@ function añadirMarcaAlMapa(marca) {
   grupoPins.addLayer(marker);
   markersPorId[marca.id] = marker;
 
-  const etiqueta = L.tooltip({ permanent: true, direction: 'top', offset: [0, -44] })
+  const etiqueta = L.tooltip({ permanent: true, direction: 'top', offset: [0, -30] })
     .setContent(marca.nombre)
     .setLatLng([marca.lat, marca.lng]);
   grupoNombres.addLayer(etiqueta);
@@ -206,13 +206,6 @@ window.cancelarModoPin = function() {
   document.getElementById('instruccion').classList.add('oculto');
   mapa.getContainer().style.cursor = '';
 };
-
-mapa.on('click', function(e) {
-  if (!modoAñadirPin) return;
-  coordsNuevoPin = e.latlng;
-  cancelarModoPin();
-  abrirModal();
-});
 
 // ══════════════════════════════
 //  EDITOR DE TEXTO ENRIQUECIDO
@@ -554,6 +547,7 @@ window.abrirPanel = function(marca) {
   const btnsAccion = usuarioActual
     ? `<div class="btns-accion">
         <button class="btn-editar" onclick="abrirModalEdicion()">✏️ Editar</button>
+        <button class="btn-mover" onclick="activarModoMover()">📍 Cambiar Posición</button>
         <button class="btn-borrar" onclick="borrarMarca('${marca.id}')">🗑️ Borrar</button>
       </div>`
     : '';
@@ -576,8 +570,69 @@ window.cerrarPanel = function() {
 };
 
 // ══════════════════════════════
-//  MODAL EDICIÓN
+//  MODO CAMBIAR POSICIÓN
 // ══════════════════════════════
+
+let modoMover = false;
+let marcaParaMover = null;
+
+window.activarModoMover = function() {
+  if (!marcaAbierta) return;
+  marcaParaMover = marcaAbierta;
+  modoMover = true;
+
+  // Cerrar panel y mostrar instrucción
+  document.getElementById('panel').classList.add('oculto');
+
+  const instrEl = document.getElementById('instruccion');
+  instrEl.innerHTML = `Haz clic en el mapa para mover <strong>${marcaParaMover.nombre}</strong> <button onclick="cancelarModoMover()">Cancelar</button>`;
+  instrEl.classList.remove('oculto');
+  mapa.getContainer().style.cursor = 'crosshair';
+};
+
+window.cancelarModoMover = function() {
+  modoMover = false;
+  marcaParaMover = null;
+  document.getElementById('instruccion').classList.add('oculto');
+  mapa.getContainer().style.cursor = '';
+  if (marcaAbierta) abrirPanel(marcaAbierta);
+};
+
+mapa.on('click', function(e) {
+  if (modoMover && marcaParaMover) {
+    const { lat, lng } = e.latlng;
+    const id = marcaParaMover.id;
+
+    // Mover el marcador visualmente de inmediato
+    if (markersPorId[id]) markersPorId[id].setLatLng([lat, lng]);
+    if (tooltipsPorId[id]) tooltipsPorId[id].setLatLng([lat, lng]);
+
+    // Actualizar datos locales
+    datosPorId[id].lat = lat;
+    datosPorId[id].lng = lng;
+    marcaParaMover.lat = lat;
+    marcaParaMover.lng = lng;
+
+    // Guardar en Firestore
+    updateDoc(doc(db, 'pins', id), { lat, lng }).catch(err => {
+      console.error('Error al mover marca:', err);
+      alert('No se pudo guardar la nueva posición.');
+    });
+
+    // Salir del modo y reabrir el panel
+    modoMover = false;
+    document.getElementById('instruccion').classList.add('oculto');
+    mapa.getContainer().style.cursor = '';
+    abrirPanel(datosPorId[id]);
+    marcaParaMover = null;
+    return;
+  }
+
+  if (!modoAñadirPin) return;
+  coordsNuevoPin = e.latlng;
+  cancelarModoPin();
+  abrirModal();
+});
 
 let fotosExistentes = [];
 
