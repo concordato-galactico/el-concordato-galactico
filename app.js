@@ -42,11 +42,16 @@ const mapa = L.map('map', {
 });
 mapa.fitBounds(bounds);
 // — Capas de imagen (de abajo hacia arriba en el mapa) —
-const capaFisico     = L.imageOverlay('mapa-fisico.png',   bounds, { zIndex: 100 }); // off por defecto
-const capaBase       = L.imageOverlay('mapa-base.png',     bounds, { zIndex: 101 }).addTo(mapa);
-const capaNodos      = L.imageOverlay('mapa-nodos.png',    bounds, { zIndex: 102 }); // off por defecto
-const capaEmblemas   = L.imageOverlay('mapa-emblemas.png', bounds, { zIndex: 103 }).addTo(mapa);
-const capaNombresImg = L.imageOverlay('mapa-nombres.png',  bounds, { zIndex: 104 }).addTo(mapa);
+const TILE_OPTS = {
+  tileSize: 256, minNativeZoom: 0, maxNativeZoom: 5,
+  minZoom: -4, maxZoom: 3, noWrap: true, bounds: bounds,
+  errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
+};
+const capaFisico     = L.tileLayer('Mapas/mapa-fisico/{z}/{x}/{y}.png',   { ...TILE_OPTS, zIndex: 100 }); // off por defecto
+const capaBase       = L.tileLayer('Mapas/mapa-base/{z}/{x}/{y}.png',     { ...TILE_OPTS, zIndex: 101 }).addTo(mapa);
+const capaNodos      = L.tileLayer('Mapas/mapa-nodos/{z}/{x}/{y}.png',    { ...TILE_OPTS, zIndex: 102 }); // off por defecto
+const capaEmblemas   = L.tileLayer('Mapas/mapa-emblemas/{z}/{x}/{y}.png', { ...TILE_OPTS, zIndex: 103 }).addTo(mapa);
+const capaNombresImg = L.tileLayer('Mapas/mapa-nombres/{z}/{x}/{y}.png',  { ...TILE_OPTS, zIndex: 104 }).addTo(mapa);
 
 const estadoImagenes = {
   fisico: false, politico: true, nodos: false, nombresImg: true, emblemas: true
