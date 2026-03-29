@@ -182,8 +182,8 @@ function crearFilaImagen(emoji, label, estadoKey, capaOverlay, inicialActivo = t
   return fila;
 }
 
-capasControl.appendChild(crearFilaImagen('📛', 'Nombres',          'nombresImg', capaNombresImg, true));
-capasControl.appendChild(crearFilaImagen('✨', 'Emblemas',         'emblemas',   capaEmblemas,   true));
+capasControl.appendChild(crearFilaImagen('📜', 'Nombres',          'nombresImg', capaNombresImg, true));
+capasControl.appendChild(crearFilaImagen('⚜️', 'Emblemas',         'emblemas',   capaEmblemas,   true));
 capasControl.appendChild(crearFilaImagen('🔵', 'Nodos Espaciales', 'nodos',      capaNodos,      false));
 capasControl.appendChild(crearFilaImagen('🗺️', 'Mapa Político',   'politico',   capaBase,       true));
 capasControl.appendChild(crearFilaImagen('🌍', 'Mapa Físico',     'fisico',     capaFisico,     false));
