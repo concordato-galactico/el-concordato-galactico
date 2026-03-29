@@ -399,7 +399,7 @@ onSnapshot(pinsCol, (snapshot) => {
       }
       // Actualizar icono y handler de clic del marcador
       if (markersPorId[datos.id]) {
-        markersPorId[datos.id].setIcon(iconoPorCategoria(datos.categoria));
+        markersPorId[datos.id].setIcon(iconoPorCategoria(datos.categoria, datos.escala || 1));
         markersPorId[datos.id].off('click');
         markersPorId[datos.id].on('click', () => abrirPanel(datosPorId[datos.id]));
       }
@@ -413,18 +413,19 @@ onSnapshot(pinsCol, (snapshot) => {
   });
 });
 
-function iconoPorCategoria(categoria) {
+function iconoPorCategoria(categoria, escala = 1) {
   const nombre = encodeURIComponent(categoria || 'Sistema Genérico');
+  const s = Math.round(40 * escala);
   return L.icon({
     iconUrl:    `Iconos/${nombre}.png`,
-    iconSize:   [40, 40],
-    iconAnchor: [20, 20],
-    popupAnchor:[0, -20],
+    iconSize:   [s, s],
+    iconAnchor: [s / 2, s / 2],
+    popupAnchor:[0, -s / 2],
   });
 }
 
 function añadirMarcaAlMapa(marca) {
-  const icono = iconoPorCategoria(marca.categoria);
+  const icono = iconoPorCategoria(marca.categoria, marca.escala || 1);
 
   const marker = L.marker([marca.lat, marca.lng], { icon: icono });
   marker.on('click', () => abrirPanel(datosPorId[marca.id]));
@@ -800,7 +801,8 @@ window.abrirPanel = function(marca) {
   const btnsAccion = usuarioActual
     ? `<div class="btns-accion">
         <button class="btn-editar" onclick="abrirModalEdicion()">✏️ Editar</button>
-        <button class="btn-mover" onclick="activarModoMover()">📍 Cambiar Posición</button>
+        <button class="btn-mover"  onclick="activarModoMover()">📍 Cambiar Posición</button>
+        <button class="btn-tamaño" onclick="abrirModalTamaño()">🔍 Tamaño</button>
         <button class="btn-borrar" onclick="borrarMarca('${marca.id}')">🗑️ Borrar</button>
       </div>`
     : '';
@@ -1029,6 +1031,62 @@ window.guardarEdicion = async function() {
     document.body.style.userSelect = '';
   });
 })();
+
+// ══════════════════════════════
+//  MODAL TAMAÑO DE ICONO
+// ══════════════════════════════
+
+window.abrirModalTamaño = function() {
+  if (!marcaAbierta) return;
+  const escalaActual = marcaAbierta.escala || 1;
+  const slider = document.getElementById('tamaño-slider');
+  const label  = document.getElementById('tamaño-valor');
+  slider.value = escalaActual;
+  label.textContent = parseFloat(escalaActual).toFixed(1) + '×';
+
+  // Preview en tiempo real
+  slider.oninput = () => {
+    const v = parseFloat(slider.value);
+    label.textContent = v.toFixed(1) + '×';
+    if (markersPorId[marcaAbierta.id]) {
+      markersPorId[marcaAbierta.id].setIcon(iconoPorCategoria(marcaAbierta.categoria, v));
+    }
+  };
+
+  document.getElementById('modal-tamaño').classList.remove('oculto');
+};
+
+window.cerrarModalTamaño = function() {
+  // Revertir preview al valor guardado si cancela
+  if (marcaAbierta && markersPorId[marcaAbierta.id]) {
+    markersPorId[marcaAbierta.id].setIcon(iconoPorCategoria(marcaAbierta.categoria, marcaAbierta.escala || 1));
+  }
+  document.getElementById('modal-tamaño').classList.add('oculto');
+};
+
+window.guardarTamaño = async function() {
+  if (!marcaAbierta) return;
+  const escala = parseFloat(document.getElementById('tamaño-slider').value);
+  const btn = document.getElementById('btn-guardar-tamaño');
+  btn.disabled = true;
+  btn.textContent = 'Guardando...';
+  try {
+    await updateDoc(doc(db, 'pins', marcaAbierta.id), { escala });
+    marcaAbierta.escala = escala;
+    datosPorId[marcaAbierta.id].escala = escala;
+    document.getElementById('modal-tamaño').classList.add('oculto');
+  } catch (err) {
+    console.error('Error al guardar tamaño:', err);
+    alert('No se pudo guardar el tamaño.');
+    // Revertir icono
+    if (markersPorId[marcaAbierta.id]) {
+      markersPorId[marcaAbierta.id].setIcon(iconoPorCategoria(marcaAbierta.categoria, marcaAbierta.escala || 1));
+    }
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '💾 Guardar tamaño';
+  }
+};
 
 // ══════════════════════════════
 //  LIGHTBOX

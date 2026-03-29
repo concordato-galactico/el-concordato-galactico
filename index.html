@@ -210,6 +210,24 @@
     </div>
   </div>
 
+  <!-- Modal tamaño de icono -->
+  <div id="modal-tamaño" class="oculto">
+    <div id="modal-tamaño-caja">
+      <h2>🔍 Tamaño del icono</h2>
+      <div class="tamaño-slider-row">
+        <input type="range" id="tamaño-slider" min="0.5" max="5" step="0.1" value="1" />
+        <span id="tamaño-valor">1.0×</span>
+      </div>
+      <div class="tamaño-hints">
+        <span>0.5×</span>
+        <span>normal: 1×</span>
+        <span>5×</span>
+      </div>
+      <button id="btn-guardar-tamaño" onclick="guardarTamaño()">💾 Guardar tamaño</button>
+      <button class="btn-secundario" onclick="cerrarModalTamaño()">Cancelar</button>
+    </div>
+  </div>
+
   <script type="module" src="app.js"></script>
 
 </body>

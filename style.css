@@ -180,48 +180,70 @@ body {
 /* ── BOTONES DE ACCIÓN ── */
 .btns-accion {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   margin-top: 16px;
+  flex-wrap: wrap;
 }
 
 .btn-editar {
   flex: 1;
+  min-width: 0;
   background: transparent;
   border: 1px solid #4285F4;
   color: #4285F4;
-  padding: 9px;
+  padding: 9px 6px;
   border-radius: 9px;
-  font-size: 0.88rem;
+  font-size: 0.80rem;
   cursor: pointer;
   transition: background 0.18s, color 0.18s;
+  white-space: nowrap;
 }
 .btn-editar:hover { background: #4285F4; color: #fff; }
 
 .btn-borrar {
   flex: 1;
+  min-width: 0;
   background: transparent;
   border: 1px solid #e94560;
   color: #e94560;
-  padding: 9px;
+  padding: 9px 6px;
   border-radius: 9px;
-  font-size: 0.88rem;
+  font-size: 0.80rem;
   cursor: pointer;
   transition: background 0.18s, color 0.18s;
+  white-space: nowrap;
 }
 .btn-borrar:hover { background: #e94560; color: #fff; }
 
 .btn-mover {
-  flex: 1;
+  flex: 1.5;
+  min-width: 0;
   background: transparent;
   border: 1px solid #f0a500;
   color: #f0a500;
-  padding: 9px;
+  padding: 9px 6px;
   border-radius: 9px;
-  font-size: 0.88rem;
+  font-size: 0.80rem;
   cursor: pointer;
   transition: background 0.18s, color 0.18s;
+  white-space: nowrap;
 }
 .btn-mover:hover { background: #f0a500; color: #fff; }
+
+.btn-tamaño {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: 1px solid #a259f7;
+  color: #a259f7;
+  padding: 9px 6px;
+  border-radius: 9px;
+  font-size: 0.80rem;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s;
+  white-space: nowrap;
+}
+.btn-tamaño:hover { background: #a259f7; color: #fff; }
 
 /* ── BOTÓN AÑADIR PIN ── */
 #btn-añadir {
@@ -766,3 +788,64 @@ body {
   min-height: 180px;
   max-height: 400px;
 }
+
+/* ── MODAL TAMAÑO DE ICONO ── */
+#modal-tamaño {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.72);
+  z-index: 2100; display: flex;
+  align-items: center; justify-content: center;
+}
+
+#modal-tamaño-caja {
+  background: #16213e;
+  border: 2px solid #a259f7;
+  border-radius: 14px;
+  padding: 28px 32px;
+  width: 90%; max-width: 360px;
+  display: flex; flex-direction: column; gap: 18px;
+}
+
+#modal-tamaño-caja h2 {
+  color: #a259f7;
+  font-size: 1.2rem;
+  margin: 0;
+}
+
+.tamaño-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+#tamaño-slider {
+  flex: 1;
+  accent-color: #a259f7;
+  cursor: pointer;
+  height: 6px;
+}
+
+#tamaño-valor {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #a259f7;
+  min-width: 38px;
+  text-align: right;
+}
+
+.tamaño-hints {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: #555;
+  margin-top: -10px;
+}
+
+#btn-guardar-tamaño {
+  background: #a259f7; color: #fff; border: none;
+  padding: 11px; border-radius: 9px;
+  font-size: 0.95rem; font-weight: bold;
+  cursor: pointer; width: 100%;
+}
+#btn-guardar-tamaño:hover { background: #8b3ee8; }
+#btn-guardar-tamaño:disabled { opacity: 0.5; cursor: not-allowed; }
