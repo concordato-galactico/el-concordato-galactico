@@ -634,12 +634,6 @@ body {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  background: rgba(12, 20, 44, 0.94);
-  border: 1px solid #0f3460;
-  border-radius: 14px;
-  padding: 10px;
-  backdrop-filter: blur(8px);
-  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
   min-width: 195px;
 }
 

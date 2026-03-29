@@ -45,8 +45,8 @@ mapa.fitBounds(bounds);
 const capaFisico   = L.imageOverlay('mapa-fisico.png',   bounds, { zIndex: 100 }).addTo(mapa);
 const capaBase     = L.imageOverlay('mapa-base.png',     bounds, { zIndex: 101 }).addTo(mapa);
 const capaNodos    = L.imageOverlay('mapa-nodos.png',    bounds, { zIndex: 102 }).addTo(mapa);
-const capaNombresImg = L.imageOverlay('mapa-nombres.png',  bounds, { zIndex: 103 }).addTo(mapa);
-const capaEmblemas = L.imageOverlay('mapa-emblemas.png', bounds, { zIndex: 104 }).addTo(mapa);
+const capaEmblemas   = L.imageOverlay('mapa-emblemas.png', bounds, { zIndex: 103 }).addTo(mapa);
+const capaNombresImg = L.imageOverlay('mapa-nombres.png',  bounds, { zIndex: 104 }).addTo(mapa);
 
 const estadoImagenes = {
   fisico: true, politico: true, nodos: true, nombresImg: true, emblemas: true
@@ -109,8 +109,8 @@ function crearFilaImagen(emoji, label, estadoKey, capaOverlay) {
   return fila;
 }
 
-capasControl.appendChild(crearFilaImagen('✨', 'Emblemas',         'emblemas',   capaEmblemas));
 capasControl.appendChild(crearFilaImagen('📛', 'Nombres',          'nombresImg', capaNombresImg));
+capasControl.appendChild(crearFilaImagen('✨', 'Emblemas',         'emblemas',   capaEmblemas));
 capasControl.appendChild(crearFilaImagen('🔵', 'Nodos Espaciales', 'nodos',      capaNodos));
 capasControl.appendChild(crearFilaImagen('🗺️', 'Mapa Político',   'politico',   capaBase));
 capasControl.appendChild(crearFilaImagen('🌍', 'Mapa Físico',     'fisico',     capaFisico));
@@ -143,23 +143,40 @@ const dropdownCats = document.createElement('div');
 dropdownCats.id = 'categorias-dropdown';
 dropdownCats.className = 'oculto';
 
+let snapshotAntesDeIsolate = null; // null = no hay isolate activo
+
 CATEGORIAS.forEach(cat => {
   const fila = document.createElement('div');
   fila.className = 'cat-fila';
 
   const check = document.createElement('input');
-  check.type    = 'checkbox';
-  check.checked = true;
-  check.id      = `cat-chk-${CSS.escape(cat)}`;
+  check.type        = 'checkbox';
+  check.checked     = true;
+  check.id          = `cat-chk-${CSS.escape(cat)}`;
+  check.dataset.cat = cat;
 
   check.addEventListener('change', () => {
-    if (check.checked) categoriasVisibles.add(cat);
-    else               categoriasVisibles.delete(cat);
+    if (snapshotAntesDeIsolate !== null) {
+      // Salir del isolate: restaurar snapshot previo y aplicar el cambio del usuario
+      const snapshot = snapshotAntesDeIsolate;
+      snapshotAntesDeIsolate = null;
+      categoriasVisibles.clear();
+      snapshot.forEach(c => categoriasVisibles.add(c));
+      if (check.checked) categoriasVisibles.add(cat);
+      else               categoriasVisibles.delete(cat);
+      // Sincronizar todos los checkboxes con el estado restaurado
+      dropdownCats.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+        cb.checked = categoriasVisibles.has(cb.dataset.cat);
+      });
+    } else {
+      if (check.checked) categoriasVisibles.add(cat);
+      else               categoriasVisibles.delete(cat);
+    }
     actualizarVisibilidadMarcas();
   });
 
   const lbl = document.createElement('label');
-  lbl.htmlFor    = check.id;
+  lbl.htmlFor     = check.id;
   lbl.textContent = cat;
 
   const btnIsolate = document.createElement('button');
@@ -167,10 +184,11 @@ CATEGORIAS.forEach(cat => {
   btnIsolate.textContent = '◎';
   btnIsolate.title       = `Solo ${cat}`;
   btnIsolate.addEventListener('click', () => {
+    snapshotAntesDeIsolate = new Set(categoriasVisibles); // guardar estado actual
     categoriasVisibles.clear();
     categoriasVisibles.add(cat);
     dropdownCats.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-      cb.checked = (cb.id === check.id);
+      cb.checked = (cb.dataset.cat === cat);
     });
     actualizarVisibilidadMarcas();
   });
