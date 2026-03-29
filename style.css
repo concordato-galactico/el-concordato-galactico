@@ -647,3 +647,12 @@ body {
   min-height: 180px;
   max-height: 400px;
 }
+
+/* ── OVERRIDES MODAL EDICIÓN MARCA ── */
+#modal-edicion #modal-edicion-caja {
+  max-width: 736px;
+}
+#modal-edicion .editor-content {
+  min-height: 180px;
+  max-height: 400px;
+}
