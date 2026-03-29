@@ -38,7 +38,7 @@ const pinsCol = collection(db, 'pins');
 const bounds = [[0, 0], [ALTO_MAPA, ANCHO_MAPA]];
 const mapa = L.map('map', {
   crs: L.CRS.Simple,
-  minZoom: -4, maxZoom: 3, zoomSnap: 0.25,
+  minZoom: -4, maxZoom: 0, zoomSnap: 0.25,
 });
 mapa.fitBounds(bounds);
 // — Capas de imagen (de abajo hacia arriba en el mapa) —
@@ -67,7 +67,7 @@ const MapaTileLayer = L.GridLayer.extend({
 function crearCapaTiles(ruta, zIndex) {
   return new MapaTileLayer(ruta, {
     tileSize: 256,
-    minZoom: -4, maxZoom: 3,
+    minZoom: -4, maxZoom: 0,
     zIndex, bounds, noWrap: true,
     keepBuffer: 0,
     updateWhenIdle: true,
@@ -77,11 +77,10 @@ function crearCapaTiles(ruta, zIndex) {
 const capaFisico     = crearCapaTiles('Mapas/mapa-fisico',   100); // off por defecto
 const capaBase       = crearCapaTiles('Mapas/mapa-base',     101).addTo(mapa);
 const capaNodos      = crearCapaTiles('Mapas/mapa-nodos',    102); // off por defecto
-const capaEmblemas   = crearCapaTiles('Mapas/mapa-emblemas', 103).addTo(mapa);
 const capaNombresImg = crearCapaTiles('Mapas/mapa-nombres',  104).addTo(mapa);
 
 const estadoImagenes = {
-  fisico: false, politico: true, nodos: false, nombresImg: true, emblemas: true
+  fisico: false, politico: true, nodos: false, nombresImg: true
 };
 
 // — Capas de marcas —
@@ -182,8 +181,7 @@ function crearFilaImagen(emoji, label, estadoKey, capaOverlay, inicialActivo = t
   return fila;
 }
 
-capasControl.appendChild(crearFilaImagen('📜', 'Nombres',          'nombresImg', capaNombresImg, true));
-capasControl.appendChild(crearFilaImagen('⚜️', 'Emblemas',         'emblemas',   capaEmblemas,   true));
+capasControl.appendChild(crearFilaImagen('📜', 'Regiones',         'nombresImg', capaNombresImg, true));
 capasControl.appendChild(crearFilaImagen('🔵', 'Nodos Espaciales', 'nodos',      capaNodos,      false));
 capasControl.appendChild(crearFilaImagen('🗺️', 'Mapa Político',   'politico',   capaBase,       true));
 capasControl.appendChild(crearFilaImagen('🌍', 'Mapa Físico',     'fisico',     capaFisico,     false));

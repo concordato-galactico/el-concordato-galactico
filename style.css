@@ -219,8 +219,8 @@ body {
   flex: 1.5;
   min-width: 0;
   background: transparent;
-  border: 1px solid #f0a500;
-  color: #f0a500;
+  border: 1px solid #4285F4;
+  color: #4285F4;
   padding: 9px 6px;
   border-radius: 9px;
   font-size: 0.80rem;
@@ -228,14 +228,14 @@ body {
   transition: background 0.18s, color 0.18s;
   white-space: nowrap;
 }
-.btn-mover:hover { background: #f0a500; color: #fff; }
+.btn-mover:hover { background: #4285F4; color: #fff; }
 
 .btn-tamaño {
   flex: 1;
   min-width: 0;
   background: transparent;
-  border: 1px solid #a259f7;
-  color: #a259f7;
+  border: 1px solid #4285F4;
+  color: #4285F4;
   padding: 9px 6px;
   border-radius: 9px;
   font-size: 0.80rem;
@@ -243,7 +243,7 @@ body {
   transition: background 0.18s, color 0.18s;
   white-space: nowrap;
 }
-.btn-tamaño:hover { background: #a259f7; color: #fff; }
+.btn-tamaño:hover { background: #4285F4; color: #fff; }
 
 /* ── BOTÓN AÑADIR PIN ── */
 #btn-añadir {
