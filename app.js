@@ -41,39 +41,177 @@ const mapa = L.map('map', {
   minZoom: -4, maxZoom: 3, zoomSnap: 0.25,
 });
 mapa.fitBounds(bounds);
-L.imageOverlay(ARCHIVO_MAPA, bounds).addTo(mapa);
+// — Capas de imagen (de abajo hacia arriba en el mapa) —
+const capaFisico   = L.imageOverlay('mapa-fisico.png',   bounds, { zIndex: 100 }).addTo(mapa);
+const capaBase     = L.imageOverlay('mapa-base.png',     bounds, { zIndex: 101 }).addTo(mapa);
+const capaNodos    = L.imageOverlay('mapa-nodos.png',    bounds, { zIndex: 102 }).addTo(mapa);
+const capaNombresImg = L.imageOverlay('mapa-nombres.png',  bounds, { zIndex: 103 }).addTo(mapa);
+const capaEmblemas = L.imageOverlay('mapa-emblemas.png', bounds, { zIndex: 104 }).addTo(mapa);
 
-// — Capas —
+const estadoImagenes = {
+  fisico: true, politico: true, nodos: true, nombresImg: true, emblemas: true
+};
+
+// — Capas de marcas —
 const grupoPins    = L.layerGroup().addTo(mapa);
 const grupoNombres = L.layerGroup().addTo(mapa);
 const estadoCapas  = { marcas: true, nombres: true };
 
+// — Filtro por categoría —
+const CATEGORIAS = ['Sistema', 'Planeta', 'Estrella', 'Agujero Negro', 'Puerto Espacial', 'Nave'];
+const categoriasVisibles = new Set(CATEGORIAS);
+
+function debeEstarVisible(datos) {
+  return estadoCapas.marcas && categoriasVisibles.has(datos.categoria || 'Sistema');
+}
+
+function actualizarVisibilidadMarcas() {
+  for (const id of Object.keys(markersPorId)) {
+    const datos   = datosPorId[id];
+    const visible = debeEstarVisible(datos);
+
+    const marker = markersPorId[id];
+    if (visible) { if (!grupoPins.hasLayer(marker))    grupoPins.addLayer(marker); }
+    else          { grupoPins.removeLayer(marker); }
+
+    const tooltip = tooltipsPorId[id];
+    if (tooltip) {
+      if (visible) { if (!grupoNombres.hasLayer(tooltip)) grupoNombres.addLayer(tooltip); }
+      else          { grupoNombres.removeLayer(tooltip); }
+    }
+  }
+}
+
+// — Panel de control de capas —
 const capasControl = document.createElement('div');
 capasControl.id = 'capas-control';
 
-function crearBtnCapa(label, key, capa) {
+// Helper: fila con botón toggle para imagen de fondo
+function crearFilaImagen(emoji, label, estadoKey, capaOverlay) {
+  const fila = document.createElement('div');
+  fila.className = 'capa-fila';
+
   const btn = document.createElement('button');
   btn.className = 'btn-capa activo';
-  btn.textContent = label;
+  btn.textContent = `${emoji} ${label}`;
   btn.addEventListener('click', () => {
-    estadoCapas[key] = !estadoCapas[key];
-    if (estadoCapas[key]) { mapa.addLayer(capa); btn.classList.replace('inactivo','activo'); }
-    else                  { mapa.removeLayer(capa); btn.classList.replace('activo','inactivo'); }
+    estadoImagenes[estadoKey] = !estadoImagenes[estadoKey];
+    if (estadoImagenes[estadoKey]) {
+      capaOverlay.addTo(mapa);
+      btn.classList.replace('inactivo', 'activo');
+    } else {
+      mapa.removeLayer(capaOverlay);
+      btn.classList.replace('activo', 'inactivo');
+    }
   });
-  return btn;
+
+  fila.appendChild(btn);
+  return fila;
 }
 
-capasControl.appendChild(crearBtnCapa('📌 Marcas',  'marcas',  grupoPins));
-capasControl.appendChild(crearBtnCapa('🏷️ Nombres', 'nombres', grupoNombres));
+capasControl.appendChild(crearFilaImagen('✨', 'Emblemas',         'emblemas',   capaEmblemas));
+capasControl.appendChild(crearFilaImagen('📛', 'Nombres',          'nombresImg', capaNombresImg));
+capasControl.appendChild(crearFilaImagen('🔵', 'Nodos Espaciales', 'nodos',      capaNodos));
+capasControl.appendChild(crearFilaImagen('🗺️', 'Mapa Político',   'politico',   capaBase));
+capasControl.appendChild(crearFilaImagen('🌍', 'Mapa Físico',     'fisico',     capaFisico));
 
-CAPAS_EXTRA.forEach((c, i) => {
-  const capa = L.imageOverlay(c.archivo, bounds);
-  const key  = `extra_${i}`;
-  estadoCapas[key] = false;
-  const btn = crearBtnCapa(c.nombre, key, capa);
-  btn.classList.replace('activo','inactivo');
-  capasControl.appendChild(btn);
+// Separador
+const capasHr = document.createElement('hr');
+capasHr.className = 'capas-sep';
+capasControl.appendChild(capasHr);
+
+// — Fila Marcas con desplegable de categorías —
+const filaMarcas = document.createElement('div');
+filaMarcas.className = 'capa-fila capa-fila-marcas';
+
+const btnMarcas = document.createElement('button');
+btnMarcas.className = 'btn-capa activo';
+btnMarcas.textContent = '📌 Marcas';
+btnMarcas.addEventListener('click', () => {
+  estadoCapas.marcas = !estadoCapas.marcas;
+  btnMarcas.classList.toggle('activo',   estadoCapas.marcas);
+  btnMarcas.classList.toggle('inactivo', !estadoCapas.marcas);
+  actualizarVisibilidadMarcas();
 });
+
+const btnExpandirCats = document.createElement('button');
+btnExpandirCats.className = 'btn-expandir-cats';
+btnExpandirCats.textContent = '▾';
+btnExpandirCats.title = 'Filtrar por categoría';
+
+const dropdownCats = document.createElement('div');
+dropdownCats.id = 'categorias-dropdown';
+dropdownCats.className = 'oculto';
+
+CATEGORIAS.forEach(cat => {
+  const fila = document.createElement('div');
+  fila.className = 'cat-fila';
+
+  const check = document.createElement('input');
+  check.type    = 'checkbox';
+  check.checked = true;
+  check.id      = `cat-chk-${CSS.escape(cat)}`;
+
+  check.addEventListener('change', () => {
+    if (check.checked) categoriasVisibles.add(cat);
+    else               categoriasVisibles.delete(cat);
+    actualizarVisibilidadMarcas();
+  });
+
+  const lbl = document.createElement('label');
+  lbl.htmlFor    = check.id;
+  lbl.textContent = cat;
+
+  const btnIsolate = document.createElement('button');
+  btnIsolate.className   = 'btn-isolate';
+  btnIsolate.textContent = '◎';
+  btnIsolate.title       = `Solo ${cat}`;
+  btnIsolate.addEventListener('click', () => {
+    categoriasVisibles.clear();
+    categoriasVisibles.add(cat);
+    dropdownCats.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+      cb.checked = (cb.id === check.id);
+    });
+    actualizarVisibilidadMarcas();
+  });
+
+  fila.appendChild(check);
+  fila.appendChild(lbl);
+  fila.appendChild(btnIsolate);
+  dropdownCats.appendChild(fila);
+});
+
+btnExpandirCats.addEventListener('click', () => {
+  const abierto = !dropdownCats.classList.contains('oculto');
+  dropdownCats.classList.toggle('oculto', abierto);
+  btnExpandirCats.textContent = abierto ? '▾' : '▴';
+});
+
+filaMarcas.appendChild(btnMarcas);
+filaMarcas.appendChild(btnExpandirCats);
+capasControl.appendChild(filaMarcas);
+capasControl.appendChild(dropdownCats);
+
+// — Fila Etiquetas —
+const filaEtiquetas = document.createElement('div');
+filaEtiquetas.className = 'capa-fila';
+
+const btnEtiquetas = document.createElement('button');
+btnEtiquetas.className = 'btn-capa activo';
+btnEtiquetas.textContent = '🏷️ Etiquetas';
+btnEtiquetas.addEventListener('click', () => {
+  estadoCapas.nombres = !estadoCapas.nombres;
+  btnEtiquetas.classList.toggle('activo',   estadoCapas.nombres);
+  btnEtiquetas.classList.toggle('inactivo', !estadoCapas.nombres);
+  if (estadoCapas.nombres) {
+    if (!mapa.hasLayer(grupoNombres)) mapa.addLayer(grupoNombres);
+  } else {
+    mapa.removeLayer(grupoNombres);
+  }
+});
+
+filaEtiquetas.appendChild(btnEtiquetas);
+capasControl.appendChild(filaEtiquetas);
 
 document.body.appendChild(capasControl);
 
@@ -175,13 +313,13 @@ function añadirMarcaAlMapa(marca) {
 
   const marker = L.marker([marca.lat, marca.lng], { icon: icono });
   marker.on('click', () => abrirPanel(datosPorId[marca.id]));
-  grupoPins.addLayer(marker);
+  if (debeEstarVisible(marca)) grupoPins.addLayer(marker);
   markersPorId[marca.id] = marker;
 
   const etiqueta = L.tooltip({ permanent: true, direction: 'top', offset: [0, -14] })
     .setContent(marca.nombre)
     .setLatLng([marca.lat, marca.lng]);
-  grupoNombres.addLayer(etiqueta);
+  if (debeEstarVisible(marca)) grupoNombres.addLayer(etiqueta);
   tooltipsPorId[marca.id] = etiqueta;
 }
 
