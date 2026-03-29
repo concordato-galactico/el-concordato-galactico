@@ -42,8 +42,6 @@ const mapa = L.map('map', {
 });
 mapa.fitBounds(bounds);
 // — Capas de imagen (de abajo hacia arriba en el mapa) —
-// CRS.Simple niega el eje Y internamente, y los zooms de Leaflet no coinciden
-// con los del script de Python (offset de 5 niveles). Este GridLayer lo corrige.
 const EMPTY_TILE = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
 const MapaTileLayer = L.GridLayer.extend({
   initialize(ruta, opts) {
@@ -52,10 +50,11 @@ const MapaTileLayer = L.GridLayer.extend({
   },
   createTile(coords, done) {
     const img = document.createElement('img');
-    const pz = coords.z + 5;          // offset: Leaflet zoom 0 = Python zoom 5
+    img.style.cssText = 'display:block;width:calc(100% + 1px);height:calc(100% + 1px);image-rendering:pixelated;';
+    const pz = coords.z + 5;
     const px = coords.x;
     const n  = Math.pow(2, pz);
-    const py = coords.y + n;           // corrige eje Y negativo de CRS.Simple
+    const py = coords.y + n;
     if (px < 0 || px >= n || py < 0 || py >= n) {
       img.src = EMPTY_TILE;
     } else {
@@ -68,8 +67,12 @@ const MapaTileLayer = L.GridLayer.extend({
 });
 function crearCapaTiles(ruta, zIndex) {
   return new MapaTileLayer(ruta, {
-    tileSize: 256, minZoom: -4, maxZoom: 3,
-    zIndex, bounds, noWrap: true, keepBuffer: 2
+    tileSize: 256,
+    minZoom: -4, maxZoom: 3,
+    zIndex, bounds, noWrap: true,
+    keepBuffer: 0,
+    updateWhenIdle: true,
+    updateWhenZooming: false
   });
 }
 const capaFisico     = crearCapaTiles('Mapas/mapa-fisico',   100); // off por defecto
