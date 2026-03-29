@@ -178,7 +178,7 @@ function añadirMarcaAlMapa(marca) {
   grupoPins.addLayer(marker);
   markersPorId[marca.id] = marker;
 
-  const etiqueta = L.tooltip({ permanent: true, direction: 'top', offset: [0, -30] })
+  const etiqueta = L.tooltip({ permanent: true, direction: 'top', offset: [0, -5] })
     .setContent(marca.nombre)
     .setLatLng([marca.lat, marca.lng]);
   grupoNombres.addLayer(etiqueta);
