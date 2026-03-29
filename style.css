@@ -731,6 +731,7 @@ body {
   line-height: 1;
 }
 .btn-isolate:hover { border-color: #4285F4; color: #4285F4; background: rgba(66,133,244,0.12); }
+.btn-isolate.activo { border-color: #4285F4; color: #4285F4; background: rgba(66,133,244,0.22); }
 
 /* ── OVERRIDES MODAL NUEVA MARCA ── */
 #modal #modal-caja {

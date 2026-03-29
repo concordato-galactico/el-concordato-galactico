@@ -42,14 +42,14 @@ const mapa = L.map('map', {
 });
 mapa.fitBounds(bounds);
 // — Capas de imagen (de abajo hacia arriba en el mapa) —
-const capaFisico   = L.imageOverlay('mapa-fisico.png',   bounds, { zIndex: 100 }).addTo(mapa);
-const capaBase     = L.imageOverlay('mapa-base.png',     bounds, { zIndex: 101 }).addTo(mapa);
-const capaNodos    = L.imageOverlay('mapa-nodos.png',    bounds, { zIndex: 102 }).addTo(mapa);
+const capaFisico     = L.imageOverlay('mapa-fisico.png',   bounds, { zIndex: 100 }); // off por defecto
+const capaBase       = L.imageOverlay('mapa-base.png',     bounds, { zIndex: 101 }).addTo(mapa);
+const capaNodos      = L.imageOverlay('mapa-nodos.png',    bounds, { zIndex: 102 }); // off por defecto
 const capaEmblemas   = L.imageOverlay('mapa-emblemas.png', bounds, { zIndex: 103 }).addTo(mapa);
 const capaNombresImg = L.imageOverlay('mapa-nombres.png',  bounds, { zIndex: 104 }).addTo(mapa);
 
 const estadoImagenes = {
-  fisico: true, politico: true, nodos: true, nombresImg: true, emblemas: true
+  fisico: false, politico: true, nodos: false, nombresImg: true, emblemas: true
 };
 
 // — Capas de marcas —
@@ -87,12 +87,12 @@ const capasControl = document.createElement('div');
 capasControl.id = 'capas-control';
 
 // Helper: fila con botón toggle para imagen de fondo
-function crearFilaImagen(emoji, label, estadoKey, capaOverlay) {
+function crearFilaImagen(emoji, label, estadoKey, capaOverlay, inicialActivo = true) {
   const fila = document.createElement('div');
   fila.className = 'capa-fila';
 
   const btn = document.createElement('button');
-  btn.className = 'btn-capa activo';
+  btn.className = inicialActivo ? 'btn-capa activo' : 'btn-capa inactivo';
   btn.textContent = `${emoji} ${label}`;
   btn.addEventListener('click', () => {
     estadoImagenes[estadoKey] = !estadoImagenes[estadoKey];
@@ -109,11 +109,11 @@ function crearFilaImagen(emoji, label, estadoKey, capaOverlay) {
   return fila;
 }
 
-capasControl.appendChild(crearFilaImagen('📛', 'Nombres',          'nombresImg', capaNombresImg));
-capasControl.appendChild(crearFilaImagen('✨', 'Emblemas',         'emblemas',   capaEmblemas));
-capasControl.appendChild(crearFilaImagen('🔵', 'Nodos Espaciales', 'nodos',      capaNodos));
-capasControl.appendChild(crearFilaImagen('🗺️', 'Mapa Político',   'politico',   capaBase));
-capasControl.appendChild(crearFilaImagen('🌍', 'Mapa Físico',     'fisico',     capaFisico));
+capasControl.appendChild(crearFilaImagen('📛', 'Nombres',          'nombresImg', capaNombresImg, true));
+capasControl.appendChild(crearFilaImagen('✨', 'Emblemas',         'emblemas',   capaEmblemas,   true));
+capasControl.appendChild(crearFilaImagen('🔵', 'Nodos Espaciales', 'nodos',      capaNodos,      false));
+capasControl.appendChild(crearFilaImagen('🗺️', 'Mapa Político',   'politico',   capaBase,       true));
+capasControl.appendChild(crearFilaImagen('🌍', 'Mapa Físico',     'fisico',     capaFisico,     false));
 
 // Separador
 const capasHr = document.createElement('hr');
@@ -143,7 +143,38 @@ const dropdownCats = document.createElement('div');
 dropdownCats.id = 'categorias-dropdown';
 dropdownCats.className = 'oculto';
 
-let snapshotAntesDeIsolate = null; // null = no hay isolate activo
+// — Estado del isolate —
+let catAislada        = null;
+let snapshotPreIsolate = null;
+
+function sincronizarCheckboxes() {
+  dropdownCats.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+    cb.checked = categoriasVisibles.has(cb.dataset.cat);
+  });
+}
+
+function entrarIsolate(cat) {
+  snapshotPreIsolate = new Set(categoriasVisibles);
+  catAislada = cat;
+  categoriasVisibles.clear();
+  categoriasVisibles.add(cat);
+  sincronizarCheckboxes();
+  dropdownCats.querySelectorAll('.btn-isolate').forEach(b => {
+    b.classList.toggle('activo', b.dataset.cat === cat);
+  });
+  actualizarVisibilidadMarcas();
+}
+
+function salirIsolate() {
+  if (snapshotPreIsolate === null) return;
+  categoriasVisibles.clear();
+  snapshotPreIsolate.forEach(c => categoriasVisibles.add(c));
+  snapshotPreIsolate = null;
+  catAislada = null;
+  sincronizarCheckboxes();
+  dropdownCats.querySelectorAll('.btn-isolate').forEach(b => b.classList.remove('activo'));
+  actualizarVisibilidadMarcas();
+}
 
 CATEGORIAS.forEach(cat => {
   const fila = document.createElement('div');
@@ -156,18 +187,12 @@ CATEGORIAS.forEach(cat => {
   check.dataset.cat = cat;
 
   check.addEventListener('change', () => {
-    if (snapshotAntesDeIsolate !== null) {
-      // Salir del isolate: restaurar snapshot previo y aplicar el cambio del usuario
-      const snapshot = snapshotAntesDeIsolate;
-      snapshotAntesDeIsolate = null;
-      categoriasVisibles.clear();
-      snapshot.forEach(c => categoriasVisibles.add(c));
+    if (catAislada !== null) {
+      // Salir del isolate, restaurar snapshot, luego aplicar este cambio encima
+      salirIsolate();
       if (check.checked) categoriasVisibles.add(cat);
       else               categoriasVisibles.delete(cat);
-      // Sincronizar todos los checkboxes con el estado restaurado
-      dropdownCats.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-        cb.checked = categoriasVisibles.has(cb.dataset.cat);
-      });
+      sincronizarCheckboxes();
     } else {
       if (check.checked) categoriasVisibles.add(cat);
       else               categoriasVisibles.delete(cat);
@@ -183,14 +208,13 @@ CATEGORIAS.forEach(cat => {
   btnIsolate.className   = 'btn-isolate';
   btnIsolate.textContent = '◎';
   btnIsolate.title       = `Solo ${cat}`;
+  btnIsolate.dataset.cat = cat;
   btnIsolate.addEventListener('click', () => {
-    snapshotAntesDeIsolate = new Set(categoriasVisibles); // guardar estado actual
-    categoriasVisibles.clear();
-    categoriasVisibles.add(cat);
-    dropdownCats.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-      cb.checked = (cb.dataset.cat === cat);
-    });
-    actualizarVisibilidadMarcas();
+    if (catAislada === cat) {
+      salirIsolate(); // segunda pulsada = desactivar isolate
+    } else {
+      entrarIsolate(cat);
+    }
   });
 
   fila.appendChild(check);
