@@ -90,7 +90,48 @@ const grupoNombres = L.layerGroup().addTo(mapa);
 const estadoCapas  = { marcas: true, nombres: true };
 
 // — Filtro por categoría —
-const CATEGORIAS = ['Sistema', 'Planeta', 'Estrella', 'Agujero Negro', 'Puerto Espacial', 'Nave'];
+const CATEGORIAS = [
+  'Armada',
+  'Batalla Naval',
+  'Capital',
+  'Contaminación',
+  'Estación Espacial 1',
+  'Estación Espacial 2',
+  'Estructura Espacial',
+  'Fauna Espacial dócil',
+  'Fauna Espacial hostil',
+  'Fauna Espacial',
+  'Flota Civil',
+  'Grieta Astral',
+  'Hábitat Orbital',
+  'Monstruo Espacial',
+  'Nave Civil',
+  'Peligro',
+  'Planeta Bajo Asedio',
+  'Planeta Científico',
+  'Planeta Colonizado',
+  'Planeta Comercial',
+  'Planeta Disponible',
+  'Planeta Espiritual',
+  'Planeta Industrial',
+  'Planeta Minero',
+  'Planeta Natural',
+  'Planeta Ocio',
+  'Planeta Ocupado',
+  'Planeta Prisión',
+  'Planeta Robot',
+  'Planeta Urbano',
+  'Radiación',
+  'Sistema Agujero Negro',
+  'Sistema Binario',
+  'Sistema Genérico',
+  'Sistema Ocupado',
+  'Sistema Primario',
+  'Sistema Púlsar',
+  'Sistema Trinario',
+  'Sonda',
+  'Símbolo Genérico 1',
+];
 const categoriasVisibles = new Set(CATEGORIAS);
 
 function debeEstarVisible(datos) {
@@ -373,9 +414,9 @@ onSnapshot(pinsCol, (snapshot) => {
 });
 
 function iconoPorCategoria(categoria) {
-  const nombre = encodeURIComponent(categoria || 'Sistema');
+  const nombre = encodeURIComponent(categoria || 'Sistema Genérico');
   return L.icon({
-    iconUrl:    `categorias/${nombre}.png`,
+    iconUrl:    `Iconos/${nombre}.png`,
     iconSize:   [40, 40],
     iconAnchor: [20, 20],
     popupAnchor:[0, -20],
