@@ -50,7 +50,6 @@ const MapaTileLayer = L.GridLayer.extend({
   },
   createTile(coords, done) {
     const img = document.createElement('img');
-    img.style.cssText = 'display:block;width:calc(100% + 1px);height:calc(100% + 1px);image-rendering:pixelated;';
     const pz = coords.z + 5;
     const px = coords.x;
     const n  = Math.pow(2, pz);
