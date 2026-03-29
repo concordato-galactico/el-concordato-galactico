@@ -42,17 +42,41 @@ const mapa = L.map('map', {
 });
 mapa.fitBounds(bounds);
 // — Capas de imagen (de abajo hacia arriba en el mapa) —
-const TILE_OPTS = {
-  tileSize: 256, minNativeZoom: 0, maxNativeZoom: 3,
-  minZoom: -4, maxZoom: 3, noWrap: true, bounds: bounds,
-  tms: true,
-  errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
-};
-const capaFisico     = L.tileLayer('Mapas/mapa-fisico/{z}/{x}/{y}.png',   { ...TILE_OPTS, zIndex: 100 }); // off por defecto
-const capaBase       = L.tileLayer('Mapas/mapa-base/{z}/{x}/{y}.png',     { ...TILE_OPTS, zIndex: 101 }).addTo(mapa);
-const capaNodos      = L.tileLayer('Mapas/mapa-nodos/{z}/{x}/{y}.png',    { ...TILE_OPTS, zIndex: 102 }); // off por defecto
-const capaEmblemas   = L.tileLayer('Mapas/mapa-emblemas/{z}/{x}/{y}.png', { ...TILE_OPTS, zIndex: 103 }).addTo(mapa);
-const capaNombresImg = L.tileLayer('Mapas/mapa-nombres/{z}/{x}/{y}.png',  { ...TILE_OPTS, zIndex: 104 }).addTo(mapa);
+// CRS.Simple niega el eje Y internamente, y los zooms de Leaflet no coinciden
+// con los del script de Python (offset de 5 niveles). Este GridLayer lo corrige.
+const EMPTY_TILE = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
+const MapaTileLayer = L.GridLayer.extend({
+  initialize(ruta, opts) {
+    this._ruta = ruta;
+    L.GridLayer.prototype.initialize.call(this, opts);
+  },
+  createTile(coords, done) {
+    const img = document.createElement('img');
+    const pz = coords.z + 5;          // offset: Leaflet zoom 0 = Python zoom 5
+    const px = coords.x;
+    const n  = Math.pow(2, pz);
+    const py = coords.y + n;           // corrige eje Y negativo de CRS.Simple
+    if (px < 0 || px >= n || py < 0 || py >= n) {
+      img.src = EMPTY_TILE;
+    } else {
+      img.src = `${this._ruta}/${pz}/${px}/${py}.png`;
+    }
+    img.onload  = () => done(null, img);
+    img.onerror = () => { img.src = EMPTY_TILE; done(null, img); };
+    return img;
+  }
+});
+function crearCapaTiles(ruta, zIndex) {
+  return new MapaTileLayer(ruta, {
+    tileSize: 256, minZoom: -4, maxZoom: 3,
+    zIndex, bounds, noWrap: true, keepBuffer: 2
+  });
+}
+const capaFisico     = crearCapaTiles('Mapas/mapa-fisico',   100); // off por defecto
+const capaBase       = crearCapaTiles('Mapas/mapa-base',     101).addTo(mapa);
+const capaNodos      = crearCapaTiles('Mapas/mapa-nodos',    102); // off por defecto
+const capaEmblemas   = crearCapaTiles('Mapas/mapa-emblemas', 103).addTo(mapa);
+const capaNombresImg = crearCapaTiles('Mapas/mapa-nombres',  104).addTo(mapa);
 
 const estadoImagenes = {
   fisico: false, politico: true, nodos: false, nombresImg: true, emblemas: true
