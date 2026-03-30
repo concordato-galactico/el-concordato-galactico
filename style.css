@@ -1107,6 +1107,47 @@ body {
   margin-top: 5px;
 }
 
+/* Slider tamaño icono subcategoría */
+.subcat-tamaño-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 2px;
+}
+.subcat-tamaño-slider {
+  flex: 1;
+  accent-color: #a259f7;
+  cursor: pointer;
+  height: 5px;
+}
+.subcat-tamaño-valor {
+  font-size: 0.88rem;
+  font-weight: bold;
+  color: #a259f7;
+  min-width: 34px;
+  text-align: right;
+}
+
+/* Botones de orden arriba/abajo */
+.subcat-orden-btns {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+  justify-content: flex-end;
+}
+.btn-subcat-orden {
+  background: transparent;
+  border: 1px solid #4285F4;
+  color: #4285F4;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  line-height: 1;
+}
+.btn-subcat-orden:hover { background: #4285F4; color: #fff; }
+
 .subcat-progreso-caja {
   margin-top: 8px;
   background: #0f3460;

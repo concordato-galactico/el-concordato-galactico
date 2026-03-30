@@ -1179,6 +1179,11 @@ function crearFormSubcat(prefijo, datos) {
     <input type="text" class="subcat-input-titulo" placeholder="Título de la subcategoría..." value="${titulo.replace(/"/g,'&quot;').replace(/</g,'&lt;')}" />
     <label class="subcat-lbl">Categoría *</label>
     <select class="subcat-input-categoria">${crearOpcionesCategorias(categoria)}</select>
+    <label class="subcat-lbl">Tamaño del Icono</label>
+    <div class="subcat-tamaño-row">
+      <input type="range" class="subcat-tamaño-slider" min="0.5" max="3" step="0.1" value="${datos?.iconoEscala || 1}" />
+      <span class="subcat-tamaño-valor">${parseFloat(datos?.iconoEscala || 1).toFixed(1)}×</span>
+    </div>
     <label class="subcat-lbl">Descripción</label>
     <div class="editor-toolbar">
       <button type="button" onclick="formatText('bold')" title="Negrita"><b>N</b></button>
@@ -1202,6 +1207,10 @@ function crearFormSubcat(prefijo, datos) {
     <div class="subcat-progreso-caja oculto">
       <div class="subcat-progreso-barra"></div>
       <span class="subcat-progreso-texto">Subiendo...</span>
+    </div>
+    <div class="subcat-orden-btns">
+      <button type="button" class="btn-subcat-orden btn-subcat-subir" title="Subir subcategoría">▲</button>
+      <button type="button" class="btn-subcat-orden btn-subcat-bajar" title="Bajar subcategoría">▼</button>
     </div>
   `;
 
@@ -1250,6 +1259,27 @@ function crearFormSubcat(prefijo, datos) {
       }
     });
     fi.click();
+  });
+
+  // Slider tamaño icono
+  const sliderEl = wrap.querySelector('.subcat-tamaño-slider');
+  const sliderValorEl = wrap.querySelector('.subcat-tamaño-valor');
+  sliderEl.addEventListener('input', () => {
+    sliderValorEl.textContent = parseFloat(sliderEl.value).toFixed(1) + '×';
+  });
+
+  // Botones orden arriba/abajo
+  wrap.querySelector('.btn-subcat-subir').addEventListener('click', () => {
+    const container = wrap.parentElement;
+    const forms = [...container.querySelectorAll(':scope > .subcat-form')];
+    const i = forms.indexOf(wrap);
+    if (i > 0) container.insertBefore(wrap, forms[i - 1]);
+  });
+  wrap.querySelector('.btn-subcat-bajar').addEventListener('click', () => {
+    const container = wrap.parentElement;
+    const forms = [...container.querySelectorAll(':scope > .subcat-form')];
+    const i = forms.indexOf(wrap);
+    if (i < forms.length - 1) container.insertBefore(forms[i + 1], wrap);
   });
 
   return wrap;
@@ -1311,7 +1341,7 @@ async function recogerSubcats(containerId) {
       if (textoEl) textoEl.textContent = 'Fotos subidas ✓';
     }
 
-    resultado.push({ titulo, categoria, descripcion, fotos: [...fotosExistentes, ...urlsNuevas] });
+    resultado.push({ titulo, categoria, iconoEscala: parseFloat(form.querySelector('.subcat-tamaño-slider').value) || 1, descripcion, fotos: [...fotosExistentes, ...urlsNuevas] });
   }
 
   return resultado;
@@ -1336,7 +1366,7 @@ function renderSubcatsEnPanel(subcats) {
     return `
       <div class="subcat-franja" data-index="${i}">
         <div class="subcat-franja-header" onclick="toggleSubcatBody(this)">
-          <img class="subcat-franja-icono" src="Iconos/${catEnc}.png" onerror="this.style.visibility='hidden'" />
+          <img class="subcat-franja-icono" src="Iconos/${catEnc}.png" style="width:${Math.round(30*(sub.iconoEscala||1))}px;height:${Math.round(30*(sub.iconoEscala||1))}px;" onerror="this.style.visibility='hidden'" />
           <span class="subcat-franja-titulo"><strong>${sub.titulo}</strong></span>
           <span class="subcat-franja-cat">Categoría: <span>${sub.categoria}</span></span>
           <button type="button" class="btn-subcat-toggle">▼</button>
@@ -1424,7 +1454,7 @@ window.guardarSubcatEdit = async function() {
       }
     }
 
-    const subcatActualizada = { titulo, categoria, descripcion, fotos: [...fotosExistentes, ...urlsNuevas] };
+    const subcatActualizada = { titulo, categoria, iconoEscala: parseFloat(form.querySelector('.subcat-tamaño-slider').value) || 1, descripcion, fotos: [...fotosExistentes, ...urlsNuevas] };
     const subcats = [...(marcaAbierta.subcategorias || [])];
     subcats[index] = subcatActualizada;
 
