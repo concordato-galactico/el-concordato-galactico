@@ -883,7 +883,7 @@ body {
 ══════════════════════════════ */
 .subcat-franja {
   border-top: 1px solid #0f3460;
-  margin-top: 8px;
+  margin-top: 0;
   margin-bottom: 0;
   overflow: hidden;
 }
@@ -892,7 +892,7 @@ body {
   display: flex;
   align-items: center;
   gap: 7px;
-  padding: 1px 3px 1px 5px;
+  padding: 5px 3px 4px 5px;
   cursor: pointer;
   border-radius: 8px;
   transition: background 0.15s;

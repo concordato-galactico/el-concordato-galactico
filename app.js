@@ -827,7 +827,7 @@ window.abrirPanel = function(marca) {
   iconsEl.innerHTML = '';
   const subcats = marca.subcategorias || [];
   if (subcats.length > 0) {
-    const uniqueCats = [...new Set(subcats.map(s => s.categoria).filter(Boolean))];
+    const uniqueCats = [...new Set(subcats.map(s => s.categoria).filter(Boolean))].slice(0, 4);
     uniqueCats.forEach(cat => {
       const img = document.createElement('img');
       img.src = `Iconos/${encodeURIComponent(cat)}.png`;
