@@ -24,6 +24,7 @@
   <!-- Panel lateral -->
   <div id="panel" class="oculto">
     <button class="btn-cerrar" onclick="cerrarPanel()">✕</button>
+    <div id="panel-subcat-icons"></div>
     <div id="panel-scroll">
       <div id="panel-contenido"></div>
     </div>
@@ -118,6 +119,10 @@
         <span id="progreso-texto">Subiendo fotos...</span>
       </div>
 
+      <!-- Subcategorías nueva marca -->
+      <div id="nuevas-subcats-wrap"></div>
+      <button type="button" class="btn-añadir-subcat" onclick="añadirSubcatForm('nuevo')">➕ Añadir Subcategoría</button>
+
       <button id="btn-guardar" onclick="guardarPin()">💾 Guardar marca</button>
       <button class="btn-secundario" onclick="cerrarModal()">Cancelar</button>
     </div>
@@ -204,6 +209,10 @@
         <div id="edit-progreso-barra"></div>
         <span id="edit-progreso-texto">Subiendo fotos...</span>
       </div>
+
+      <!-- Subcategorías edición -->
+      <div id="edit-subcats-wrap"></div>
+      <button type="button" class="btn-añadir-subcat" onclick="añadirSubcatForm('edit')">➕ Añadir Subcategoría</button>
 
       <button id="btn-guardar-edicion" onclick="guardarEdicion()">💾 Guardar cambios</button>
       <button class="btn-secundario" onclick="cerrarModalEdicion()">Cancelar</button>

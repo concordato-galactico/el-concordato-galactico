@@ -676,11 +676,13 @@ window.abrirModal = function() {
   document.getElementById('preview-fotos').innerHTML = '';
   document.getElementById('progreso-caja').classList.add('oculto');
   document.getElementById('progreso-barra').style.width = '0%';
+  document.getElementById('nuevas-subcats-wrap').innerHTML = '';
 };
 
 window.cerrarModal = function() {
   document.getElementById('modal').classList.add('oculto');
   coordsNuevoPin = null;
+  document.getElementById('nuevas-subcats-wrap').innerHTML = '';
 };
 
 document.getElementById('input-fotos').addEventListener('change', function() {
@@ -740,10 +742,13 @@ window.guardarPin = async function() {
       document.getElementById('progreso-texto').textContent = 'Fotos subidas ✓';
     }
 
+    const subcategorias = await recogerSubcats('nuevas-subcats-wrap');
+
     await addDoc(pinsCol, {
       nombre, categoria, descripcion,
       lat: coordsNuevoPin.lat, lng: coordsNuevoPin.lng,
       fotos: urlsFotos,
+      subcategorias,
       autor: usuarioActual.displayName || usuarioActual.email,
       creadoEn: new Date().toISOString(),
     });
@@ -805,6 +810,8 @@ window.abrirPanel = function(marca) {
       </div>`
     : '';
 
+  const subcatsHTML = renderSubcatsEnPanel(marca.subcategorias || []);
+
   contenido.innerHTML = `
     <h2>${marca.nombre}</h2>
     ${marca.categoria ? `<p class="categoria"><strong>Categoría:</strong> ${marca.categoria}</p>` : ''}
@@ -812,13 +819,31 @@ window.abrirPanel = function(marca) {
     ${fotosHTML}
     ${marca.autor ? `<p class="autor">✍️ ${marca.autor}</p>` : ''}
     ${btnsAccion}
+    ${subcatsHTML}
   `;
+
+  // Iconos de subcategorías en el encabezado del panel (a la izquierda de la X)
+  const iconsEl = document.getElementById('panel-subcat-icons');
+  iconsEl.innerHTML = '';
+  const subcats = marca.subcategorias || [];
+  if (subcats.length > 0) {
+    const uniqueCats = [...new Set(subcats.map(s => s.categoria).filter(Boolean))];
+    uniqueCats.forEach(cat => {
+      const img = document.createElement('img');
+      img.src = `Iconos/${encodeURIComponent(cat)}.png`;
+      img.className = 'panel-subcat-icon';
+      img.title = cat;
+      img.onerror = () => { img.style.display = 'none'; };
+      iconsEl.appendChild(img);
+    });
+  }
 
   document.getElementById('panel').classList.remove('oculto');
 };
 
 window.cerrarPanel = function() {
   document.getElementById('panel').classList.add('oculto');
+  document.getElementById('panel-subcat-icons').innerHTML = '';
   marcaAbierta = null;
 };
 
@@ -910,6 +935,14 @@ window.abrirModalEdicion = function() {
   document.getElementById('edit-progreso-barra').style.width = '0%';
 
   renderizarFotosExistentes();
+
+  // Cargar subcategorías existentes
+  const editWrap = document.getElementById('edit-subcats-wrap');
+  editWrap.innerHTML = '';
+  (marca.subcategorias || []).forEach((sub, i) => {
+    editWrap.appendChild(crearFormSubcat('edit', { ...sub, fotos: sub.fotos || [], dataId: i }));
+  });
+
   document.getElementById('modal-edicion').classList.remove('oculto');
 };
 
@@ -935,6 +968,7 @@ window.quitarFotoExistente = function(indice) {
 window.cerrarModalEdicion = function() {
   document.getElementById('modal-edicion').classList.add('oculto');
   fotosExistentes = [];
+  document.getElementById('edit-subcats-wrap').innerHTML = '';
 };
 
 document.getElementById('edit-fotos-nuevas').addEventListener('change', function() {
@@ -975,13 +1009,15 @@ window.guardarEdicion = async function() {
     }
 
     const todasLasFotos = [...fotosExistentes, ...urlsFotosNuevas];
+    const subcategorias = await recogerSubcats('edit-subcats-wrap');
 
-    await updateDoc(doc(db, 'pins', marcaAbierta.id), { nombre, categoria, descripcion, fotos: todasLasFotos });
+    await updateDoc(doc(db, 'pins', marcaAbierta.id), { nombre, categoria, descripcion, fotos: todasLasFotos, subcategorias });
 
     marcaAbierta.nombre      = nombre;
     marcaAbierta.categoria   = categoria;
     marcaAbierta.descripcion = descripcion;
     marcaAbierta.fotos       = todasLasFotos;
+    marcaAbierta.subcategorias = subcategorias;
 
     cerrarModalEdicion();
     abrirPanel(marcaAbierta);
@@ -1099,4 +1135,328 @@ window.abrirLightbox = function(url) {
   `;
   lb.addEventListener('click', e => { if (e.target === lb) lb.remove(); });
   document.body.appendChild(lb);
+};
+
+// ══════════════════════════════
+//  SUBCATEGORÍAS
+// ══════════════════════════════
+
+let subcatCounter = 0;
+
+function crearOpcionesCategorias(valorSeleccionado) {
+  return CATEGORIAS.map(c =>
+    `<option value="${c}"${c === valorSeleccionado ? ' selected' : ''}>${c}</option>`
+  ).join('');
+}
+
+function crearFormSubcat(prefijo, datos) {
+  const titulo      = datos?.titulo    || '';
+  const categoria   = datos?.categoria || CATEGORIAS[0];
+  const descripcion = datos?.descripcion || '';
+  const fotosExist  = datos?.fotos || [];
+  const dataId      = datos?.dataId !== undefined ? datos.dataId : null;
+
+  const wrap = document.createElement('div');
+  wrap.className = 'subcat-form';
+  if (dataId !== null) wrap.dataset.dataId = dataId;
+
+  // Fotos existentes HTML
+  const fotosExistHTML = fotosExist.length > 0
+    ? `<label class="subcat-lbl">Fotos actuales</label>
+       <div class="subcat-fotos-exist">${fotosExist.map(url => `
+         <div class="foto-existente">
+           <img src="${url}" />
+           <button class="btn-quitar-foto" onclick="this.closest('.foto-existente').remove()">✕</button>
+         </div>`).join('')}</div>`
+    : '';
+
+  wrap.innerHTML = `
+    <div class="subcat-form-cabecera">
+      <span class="subcat-form-label">▸ Subcategoría</span>
+      <button type="button" class="btn-borrar-subcat-form" onclick="this.closest('.subcat-form').remove()">🗑️ Borrar subcategoría</button>
+    </div>
+    <label class="subcat-lbl">Título *</label>
+    <input type="text" class="subcat-input-titulo" placeholder="Título de la subcategoría..." value="${titulo.replace(/"/g,'&quot;').replace(/</g,'&lt;')}" />
+    <label class="subcat-lbl">Categoría *</label>
+    <select class="subcat-input-categoria">${crearOpcionesCategorias(categoria)}</select>
+    <label class="subcat-lbl">Descripción</label>
+    <div class="editor-toolbar">
+      <button type="button" onclick="formatText('bold')" title="Negrita"><b>N</b></button>
+      <button type="button" onclick="formatText('italic')" title="Cursiva"><i>C</i></button>
+      <button type="button" onclick="formatText('underline')" title="Subrayado"><u>S</u></button>
+      <div class="toolbar-sep"></div>
+      <select onchange="formatSize(this)" title="Tamaño de texto">
+        <option value="3">Normal</option>
+        <option value="1">Pequeño</option>
+        <option value="5">Grande</option>
+        <option value="7">Muy grande</option>
+      </select>
+      <div class="toolbar-sep"></div>
+      <button type="button" class="btn-img-subcat" title="Insertar imagen">🖼️</button>
+    </div>
+    <div class="editor-content subcat-editor" contenteditable="true" data-placeholder="Descripción de la subcategoría..."></div>
+    ${fotosExistHTML}
+    <label class="subcat-lbl">Fotos de pie de página</label>
+    <input type="file" class="subcat-input-fotos" accept="image/*" multiple />
+    <div class="subcat-preview-fotos"></div>
+    <div class="subcat-progreso-caja oculto">
+      <div class="subcat-progreso-barra"></div>
+      <span class="subcat-progreso-texto">Subiendo...</span>
+    </div>
+  `;
+
+  // Cargar descripción (con o sin HTML)
+  const editor = wrap.querySelector('.subcat-editor');
+  if (descripcion) {
+    editor.innerHTML = descripcion.startsWith('<') ? descripcion : descripcion.replace(/\n/g, '<br>');
+    reinjectImgControls(editor);
+  }
+
+  // Preview fotos nuevas
+  wrap.querySelector('.subcat-input-fotos').addEventListener('change', function() {
+    const preview = wrap.querySelector('.subcat-preview-fotos');
+    preview.innerHTML = '';
+    Array.from(this.files).forEach(file => {
+      const img = document.createElement('img');
+      img.src = URL.createObjectURL(file);
+      preview.appendChild(img);
+    });
+  });
+
+  // Botón imagen inline en editor de subcategoría
+  wrap.querySelector('.btn-img-subcat').addEventListener('click', () => {
+    editorActivo = editor;
+    editor.focus();
+    guardarRangoSeleccion();
+
+    const fi = document.createElement('input');
+    fi.type = 'file';
+    fi.accept = 'image/*';
+    fi.addEventListener('change', async () => {
+      const file = fi.files[0];
+      if (!file) return;
+      const cajaEl  = wrap.querySelector('.subcat-progreso-caja');
+      const barraEl = wrap.querySelector('.subcat-progreso-barra');
+      const textoEl = wrap.querySelector('.subcat-progreso-texto');
+      cajaEl.classList.remove('oculto');
+      try {
+        const url = await subirFotoCloudinaryElem(file, barraEl, textoEl);
+        textoEl.textContent = 'Imagen insertada ✓';
+        editorCapturado = editor;
+        insertarImgEnEditor(url);
+      } catch(err) {
+        console.error('Error:', err);
+        alert('Error al subir la imagen.');
+      }
+    });
+    fi.click();
+  });
+
+  return wrap;
+}
+
+// Versión de subirFotoCloudinary que acepta elementos DOM en lugar de IDs
+async function subirFotoCloudinaryElem(archivo, barraEl, textoEl) {
+  const formData = new FormData();
+  formData.append('file', archivo);
+  formData.append('upload_preset', CLOUDINARY_PRESET);
+  if (textoEl) textoEl.textContent = 'Subiendo...';
+  if (barraEl) barraEl.style.width = '0%';
+  const url = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`;
+  const res  = await fetch(url, { method: 'POST', body: formData });
+  if (!res.ok) throw new Error(`Error Cloudinary: ${res.status}`);
+  const data = await res.json();
+  if (barraEl) barraEl.style.width = '100%';
+  return data.secure_url;
+}
+
+window.añadirSubcatForm = function(prefijo) {
+  const containerId = prefijo === 'nuevo' ? 'nuevas-subcats-wrap' : 'edit-subcats-wrap';
+  document.getElementById(containerId).appendChild(crearFormSubcat(prefijo, null));
+};
+
+// Recoge todas las subcategorías de un contenedor (subiendo fotos si las hay)
+async function recogerSubcats(containerId) {
+  const container  = document.getElementById(containerId);
+  const forms      = container.querySelectorAll('.subcat-form');
+  const resultado  = [];
+
+  for (const form of forms) {
+    const titulo = form.querySelector('.subcat-input-titulo').value.trim();
+    if (!titulo) continue;
+
+    const categoria   = form.querySelector('.subcat-input-categoria').value;
+    const descripcion = limpiarEditorHTML(form.querySelector('.subcat-editor').innerHTML.trim());
+
+    // Fotos existentes (las que siguen en el DOM)
+    const fotosExistentes = [];
+    form.querySelectorAll('.subcat-fotos-exist .foto-existente img').forEach(img => {
+      fotosExistentes.push(img.src);
+    });
+
+    // Subir fotos nuevas
+    const fileInput = form.querySelector('.subcat-input-fotos');
+    const barraEl   = form.querySelector('.subcat-progreso-barra');
+    const textoEl   = form.querySelector('.subcat-progreso-texto');
+    const cajaEl    = form.querySelector('.subcat-progreso-caja');
+    const urlsNuevas = [];
+
+    if (fileInput.files.length > 0) {
+      cajaEl.classList.remove('oculto');
+      for (let i = 0; i < fileInput.files.length; i++) {
+        if (textoEl) textoEl.textContent = `Subiendo foto ${i+1}/${fileInput.files.length}...`;
+        if (barraEl) barraEl.style.width = Math.round((i / fileInput.files.length) * 100) + '%';
+        urlsNuevas.push(await subirFotoCloudinaryElem(fileInput.files[i], barraEl, textoEl));
+      }
+      if (textoEl) textoEl.textContent = 'Fotos subidas ✓';
+    }
+
+    resultado.push({ titulo, categoria, descripcion, fotos: [...fotosExistentes, ...urlsNuevas] });
+  }
+
+  return resultado;
+}
+
+// Genera el HTML de las franjas de subcategorías para el panel
+function renderSubcatsEnPanel(subcats) {
+  if (!subcats || subcats.length === 0) return '';
+
+  const puedeEditar = !!usuarioActual;
+
+  return subcats.map((sub, i) => {
+    const catEnc  = encodeURIComponent(sub.categoria || 'Sistema Genérico');
+    const descHTML = (sub.descripcion || '').startsWith('<')
+      ? sub.descripcion
+      : (sub.descripcion || '').replace(/\n/g, '<br>');
+    const fotosHTML = (sub.fotos || []).length > 0
+      ? `<div class="fotos-grid">${sub.fotos.map(url =>
+          `<img src="${url}" onclick="abrirLightbox('${url}')" />`).join('')}</div>`
+      : '';
+    const botonesAccion = puedeEditar
+      ? `<div class="subcat-btns-accion">
+           <button class="btn-editar-subcat" onclick="abrirEditarSubcat(${i})">✏️ Editar subcategoría</button>
+           <button class="btn-borrar-subcat-panel" onclick="borrarSubcatPanel(${i})">🗑️ Borrar</button>
+         </div>`
+      : '';
+
+    return `
+      <div class="subcat-franja" data-index="${i}">
+        <div class="subcat-franja-header" onclick="toggleSubcatBody(this)">
+          <img class="subcat-franja-icono" src="Iconos/${catEnc}.png" onerror="this.style.visibility='hidden'" />
+          <span class="subcat-franja-titulo"><strong>${sub.titulo}</strong></span>
+          <span class="subcat-franja-cat">Categoría: <span>${sub.categoria}</span></span>
+          <button type="button" class="btn-subcat-toggle">▼</button>
+        </div>
+        <div class="subcat-franja-cuerpo oculto">
+          <div class="descripcion">${descHTML || '<em>Sin descripción</em>'}</div>
+          ${fotosHTML}
+          ${botonesAccion}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+window.toggleSubcatBody = function(header) {
+  const franja = header.closest('.subcat-franja');
+  const cuerpo = franja.querySelector('.subcat-franja-cuerpo');
+  const btn    = franja.querySelector('.btn-subcat-toggle');
+  const abierto = !cuerpo.classList.contains('oculto');
+  cuerpo.classList.toggle('oculto', abierto);
+  if (btn) btn.textContent = abierto ? '▼' : '▲';
+};
+
+window.abrirEditarSubcat = function(index) {
+  if (!marcaAbierta) return;
+  const sub = (marcaAbierta.subcategorias || [])[index];
+  if (!sub) return;
+
+  let modal = document.getElementById('modal-subcat-edit');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'modal-subcat-edit';
+    modal.innerHTML = `
+      <div id="modal-subcat-edit-caja">
+        <h2>✏️ Editar subcategoría</h2>
+        <div id="modal-subcat-edit-inner"></div>
+        <button id="btn-guardar-subcat-edit" onclick="guardarSubcatEdit()">💾 Guardar subcategoría</button>
+        <button class="btn-secundario" onclick="cerrarModalSubcatEdit()">Cancelar</button>
+      </div>`;
+    document.body.appendChild(modal);
+  }
+
+  modal._subcatIndex = index;
+  const inner = document.getElementById('modal-subcat-edit-inner');
+  inner.innerHTML = '';
+  inner.appendChild(crearFormSubcat('subcat-edit', { ...sub, fotos: sub.fotos || [], dataId: index }));
+  modal.classList.remove('oculto');
+};
+
+window.cerrarModalSubcatEdit = function() {
+  const modal = document.getElementById('modal-subcat-edit');
+  if (modal) modal.classList.add('oculto');
+};
+
+window.guardarSubcatEdit = async function() {
+  const modal     = document.getElementById('modal-subcat-edit');
+  const index     = modal._subcatIndex;
+  const btnGuardar = document.getElementById('btn-guardar-subcat-edit');
+
+  btnGuardar.disabled = true;
+  btnGuardar.textContent = 'Guardando...';
+
+  try {
+    const form = document.querySelector('#modal-subcat-edit-inner .subcat-form');
+    const titulo = form.querySelector('.subcat-input-titulo').value.trim();
+    if (!titulo) { alert('El título es obligatorio.'); return; }
+
+    const categoria   = form.querySelector('.subcat-input-categoria').value;
+    const descripcion = limpiarEditorHTML(form.querySelector('.subcat-editor').innerHTML.trim());
+
+    const fotosExistentes = [];
+    form.querySelectorAll('.subcat-fotos-exist .foto-existente img').forEach(img => {
+      fotosExistentes.push(img.src);
+    });
+
+    const fileInput = form.querySelector('.subcat-input-fotos');
+    const barraEl   = form.querySelector('.subcat-progreso-barra');
+    const textoEl   = form.querySelector('.subcat-progreso-texto');
+    const cajaEl    = form.querySelector('.subcat-progreso-caja');
+    const urlsNuevas = [];
+
+    if (fileInput.files.length > 0) {
+      cajaEl.classList.remove('oculto');
+      for (let i = 0; i < fileInput.files.length; i++) {
+        if (textoEl) textoEl.textContent = `Subiendo foto ${i+1}/${fileInput.files.length}...`;
+        urlsNuevas.push(await subirFotoCloudinaryElem(fileInput.files[i], barraEl, textoEl));
+      }
+    }
+
+    const subcatActualizada = { titulo, categoria, descripcion, fotos: [...fotosExistentes, ...urlsNuevas] };
+    const subcats = [...(marcaAbierta.subcategorias || [])];
+    subcats[index] = subcatActualizada;
+
+    await updateDoc(doc(db, 'pins', marcaAbierta.id), { subcategorias: subcats });
+    marcaAbierta.subcategorias = subcats;
+    datosPorId[marcaAbierta.id].subcategorias = subcats;
+
+    cerrarModalSubcatEdit();
+    abrirPanel(marcaAbierta);
+
+  } catch(err) {
+    console.error('Error al guardar subcategoría:', err);
+    alert('Error al guardar la subcategoría.');
+  } finally {
+    btnGuardar.disabled  = false;
+    btnGuardar.textContent = '💾 Guardar subcategoría';
+  }
+};
+
+window.borrarSubcatPanel = async function(index) {
+  if (!confirm('¿Borrar esta subcategoría?')) return;
+  const subcats = [...(marcaAbierta.subcategorias || [])];
+  subcats.splice(index, 1);
+  await updateDoc(doc(db, 'pins', marcaAbierta.id), { subcategorias: subcats });
+  marcaAbierta.subcategorias = subcats;
+  datosPorId[marcaAbierta.id].subcategorias = subcats;
+  abrirPanel(marcaAbierta);
 };
