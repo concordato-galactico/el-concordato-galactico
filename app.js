@@ -389,7 +389,11 @@ function actualizarUI(usuario) {
   const btnAñadir = document.getElementById('btn-añadir');
 
   if (usuario) {
-    infoEl.textContent = `👤 ${usuario.displayName || usuario.email}`;
+    const nombreCompleto = usuario.displayName || '';
+    const soloNombre = nombreCompleto.split(' ')[0];
+
+    infoEl.textContent = `👤 ${soloNombre || usuario.email}`;
+
     btnLogin.classList.add('oculto');
     btnLogout.classList.remove('oculto');
     btnAñadir.classList.remove('oculto');
