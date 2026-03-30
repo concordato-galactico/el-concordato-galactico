@@ -1311,7 +1311,7 @@ window.abrirPanel = function(marca) {
     <div class="descripcion">${descHTML || '<em>Sin descripción</em>'}</div>
     ${fotosHTML}
     ${subcatsHTML}
-    ${marca.autor ? `<p class="autor">✍️ ${marca.autor}</p>` : ''}
+	${marca.autor ? `<p class="autor">✍️ ${marca.autor.split(' ')[0]}</p>` : ''}
     ${btnsAccion}
   `;
 
