@@ -859,7 +859,7 @@ body {
   right: 54px;
   display: flex;
   align-items: center;
-  gap: -1px;
+  gap: -6px;
   z-index: 10;
   flex-direction: row-reverse; /* Los más recientes a la derecha */
 }
@@ -871,7 +871,7 @@ body {
   opacity: 0.88;
   filter: drop-shadow(0 1px 3px rgba(0,0,0,0.5));
   transition: opacity 0.15s, transform 0.15s;
-  margin-top: -8px;
+  margin-top: -10px;
 }
 .panel-subcat-icon:hover {
   opacity: 1;
@@ -892,7 +892,7 @@ body {
   display: flex;
   align-items: center;
   gap: 7px;
-  padding: 1px 3px 1px 0;
+  padding: 1px 3px 1px 5px;
   cursor: pointer;
   border-radius: 8px;
   transition: background 0.15s;
@@ -903,11 +903,11 @@ body {
 }
 
 .subcat-franja-icono {
-  width: 17px;
-  height: 17px;
+  width: 30px;
+  height: 30px;
   object-fit: contain;
   flex-shrink: 0;
-  margin-left: -6px;
+  margin-left: -1px;
   filter: drop-shadow(0 1px 3px rgba(0,0,0,0.4));
 }
 
@@ -918,8 +918,9 @@ body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  margin-left: -5px;
+  margin-left: 0;
 }
+
 .subcat-franja-titulo strong {
   font-weight: 600;
 }
