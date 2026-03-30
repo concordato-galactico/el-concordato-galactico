@@ -38,6 +38,17 @@ const pinsCol = collection(db, 'pins');
 let readsData        = {};   // { pinId: isoTimestamp }
 let readsUnsubscribe = null;
 
+// — Caché local de lecturas (respaldo inmediato aunque Firestore tarde) —
+function _lsKey(uid)          { return 'cgal_reads_' + uid; }
+function cargarReadsLocal(uid) {
+  try { return JSON.parse(localStorage.getItem(_lsKey(uid)) || '{}'); }
+  catch { return {}; }
+}
+function guardarReadsLocal(uid, data) {
+  try { localStorage.setItem(_lsKey(uid), JSON.stringify(data)); }
+  catch {}
+}
+
 // — Mapa —
 const bounds = [[0, 0], [ALTO_MAPA, ANCHO_MAPA]];
 const mapa = L.map('map', {
@@ -345,8 +356,22 @@ onAuthStateChanged(auth, (usuario) => {
   if (readsUnsubscribe) { readsUnsubscribe(); readsUnsubscribe = null; }
 
   if (usuario) {
+    // Carga inmediata desde localStorage: sin esperar a Firestore, los tooltips
+    // ya se pintan correctamente desde el primer frame.
+    readsData = cargarReadsLocal(usuario.uid);
+    actualizarClasesTooltips();
+
     readsUnsubscribe = onSnapshot(doc(db, 'reads', usuario.uid), (snap) => {
-      readsData = snap.exists() ? snap.data() : {};
+      const remoto = snap.exists() ? snap.data() : {};
+      // Merge: para cada pin conservamos el timestamp MÁS RECIENTE.
+      // Esto evita que un snapshot con datos en caché antigua sobreescriba
+      // una actualización optimista local hecha segundos antes.
+      const merged = { ...readsData };
+      for (const [id, ts] of Object.entries(remoto)) {
+        if (!merged[id] || ts > merged[id]) merged[id] = ts;
+      }
+      readsData = merged;
+      guardarReadsLocal(usuario.uid, readsData);
       actualizarClasesTooltips();
     });
   } else {
@@ -408,11 +433,24 @@ function esNoLeido(datos) {
 function actualizarClaseTooltip(id) {
   const tooltip = tooltipsPorId[id];
   if (!tooltip) return;
+  const noLeido    = esNoLeido(datosPorId[id]);
+  const nuevaClase = noLeido ? 'tooltip-no-leido' : 'tooltip-leido';
   const el = tooltip.getElement();
-  if (!el) return;
-  const noLeido = esNoLeido(datosPorId[id]);
-  el.classList.toggle('tooltip-no-leido', noLeido);
-  el.classList.toggle('tooltip-leido',    !noLeido);
+  if (el) {
+    el.classList.toggle('tooltip-no-leido', noLeido);
+    el.classList.toggle('tooltip-leido',    !noLeido);
+  } else {
+    // El tooltip aún no tiene elemento DOM (p.ej. se llama antes de que Leaflet
+    // lo renderice). Actualizamos la opción y reintentamos en el siguiente frame.
+    tooltip.options.className = nuevaClase;
+    requestAnimationFrame(() => {
+      const el2 = tooltip.getElement();
+      if (el2) {
+        el2.classList.toggle('tooltip-no-leido', noLeido);
+        el2.classList.toggle('tooltip-leido',    !noLeido);
+      }
+    });
+  }
 }
 
 function actualizarClasesTooltips() {
@@ -423,11 +461,20 @@ function actualizarClasesTooltips() {
 
 async function marcarComoLeido(pinId) {
   if (!usuarioActual) return;
-  const ahora = new Date().toISOString();
-  readsData[pinId] = ahora;           // Actualización optimista local
+
+  // Usamos el propio updatedAt del pin como timestamp de lectura.
+  // Así evitamos el desfase entre el reloj local y el del servidor de Firestore:
+  // si el servidor marcó updatedAt = T, guardamos readAt = T → T > T es false → leído ✓
+  const pinData    = datosPorId[pinId];
+  const tsLectura  = (pinData && (pinData.updatedAt || pinData.creadoEn))
+                     || new Date().toISOString();
+
+  readsData[pinId] = tsLectura;
+  guardarReadsLocal(usuarioActual.uid, readsData);  // guardado inmediato en localStorage
   actualizarClaseTooltip(pinId);
+
   try {
-    await setDoc(doc(db, 'reads', usuarioActual.uid), { [pinId]: ahora }, { merge: true });
+    await setDoc(doc(db, 'reads', usuarioActual.uid), { [pinId]: tsLectura }, { merge: true });
   } catch (err) {
     console.error('Error marcando como leído:', err);
   }
