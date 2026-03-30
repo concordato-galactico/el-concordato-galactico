@@ -1240,10 +1240,7 @@ window.guardarPin = async function() {
       lat: coordsNuevoPin.lat, lng: coordsNuevoPin.lng,
       fotos: urlsFotos,
       subcategorias,
-const nombreCompleto = usuarioActual.displayName || '';
-const soloNombre = nombreCompleto.split(' ')[0];
-
-autor: soloNombre || usuarioActual.email,
+      autor: usuarioActual.displayName || usuarioActual.email,
       creadoEn:  new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     });
