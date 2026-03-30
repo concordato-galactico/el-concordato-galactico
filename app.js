@@ -640,6 +640,8 @@ function limpiarEditorHTML(html) {
   const tmp = document.createElement('div');
   tmp.innerHTML = html;
   tmp.querySelectorAll('.img-inline-controls').forEach(el => el.remove());
+  tmp.querySelectorAll('.table-controls').forEach(el => el.remove());
+  tmp.querySelectorAll('.block-code-del').forEach(el => el.remove());
   return tmp.innerHTML;
 }
 
@@ -661,7 +663,384 @@ function reinjectImgControls(editorEl) {
       else                        { img.style.margin = '0 auto'; }
     }
   });
+
+  // Reinyectar controles de tabla
+  editorEl.querySelectorAll('.editor-table-wrap').forEach(wrapper => {
+    wrapper.querySelectorAll('.table-controls').forEach(c => c.remove());
+    wrapper.insertBefore(crearControlesTabla(), wrapper.firstChild);
+    wrapper.contentEditable = 'false';
+    wrapper.querySelectorAll('td, th').forEach(cell => { cell.contentEditable = 'true'; });
+  });
+
+  // Reinyectar botón eliminar en bloques de código
+  editorEl.querySelectorAll('.block-code-wrap').forEach(wrapper => {
+    wrapper.querySelectorAll('.block-code-del').forEach(b => b.remove());
+    const delBtn = document.createElement('button');
+    delBtn.type = 'button';
+    delBtn.className = 'block-code-del';
+    delBtn.innerHTML = '✕';
+    delBtn.title = 'Eliminar bloque de código';
+    delBtn.onclick = () => wrapper.remove();
+    wrapper.insertBefore(delBtn, wrapper.firstChild);
+    wrapper.contentEditable = 'false';
+    const pre = wrapper.querySelector('pre');
+    if (pre) pre.contentEditable = 'true';
+  });
 }
+
+// ══════════════════════════════
+//  COLOR DE TEXTO Y RESALTADO
+// ══════════════════════════════
+
+const COLORES_PALETA = [
+  '#ffffff','#d4d4d4','#a3a3a3','#525252','#171717','#000000',
+  '#ef4444','#f97316','#eab308','#22c55e','#3b82f6','#8b5cf6',
+  '#ec4899','#14b8a6','#06b6d4','#f59e0b','#10b981','#6366f1',
+  '#fca5a5','#fdba74','#fde68a','#86efac','#93c5fd','#c4b5fd',
+  '#fce7f3','#ccfbf1','#cffafe','#fef9c3','#dcfce7','#dbeafe',
+  '#7f1d1d','#7c2d12','#713f12','#14532d','#1e3a5f','#4c1d95',
+  '#9f1239','#134e4a','#164e63','#78350f','#052e16','#1e1b4b',
+  'transparent',
+];
+
+let colorPickerActual = null;
+
+function cerrarColorPicker() {
+  if (colorPickerActual) { colorPickerActual.remove(); colorPickerActual = null; }
+}
+
+function crearColorPickerPopup(anchorRect, onSelect) {
+  cerrarColorPicker();
+  const popup = document.createElement('div');
+  popup.className = 'color-picker-popup';
+
+  COLORES_PALETA.forEach(color => {
+    const sw = document.createElement('div');
+    sw.className = 'color-swatch';
+    if (color === 'transparent') {
+      sw.style.cssText = 'background:none;border:1px dashed #555;display:flex;align-items:center;justify-content:center;';
+      sw.innerHTML = '<span style="font-size:0.65rem;color:#888;line-height:1;">∅</span>';
+    } else {
+      sw.style.background = color;
+    }
+    sw.title = color === 'transparent' ? 'Sin color' : color;
+    sw.addEventListener('mousedown', e => {
+      e.preventDefault();
+      e.stopPropagation();
+      onSelect(color === 'transparent' ? null : color);
+      cerrarColorPicker();
+    });
+    popup.appendChild(sw);
+  });
+
+  // Input color personalizado
+  const customRow = document.createElement('div');
+  customRow.className = 'color-custom-row';
+  const colorInput = document.createElement('input');
+  colorInput.type = 'color';
+  colorInput.value = '#ffffff';
+  colorInput.title = 'Color personalizado';
+  colorInput.addEventListener('change', e => { onSelect(e.target.value); cerrarColorPicker(); });
+  const customLabel = document.createElement('span');
+  customLabel.textContent = 'Personalizado';
+  customRow.appendChild(colorInput);
+  customRow.appendChild(customLabel);
+  popup.appendChild(customRow);
+
+  document.body.appendChild(popup);
+
+  // Posicionar bajo el botón
+  const pw = popup.offsetWidth || 218;
+  const ph = popup.offsetHeight || 180;
+  let left = anchorRect.left;
+  let top  = anchorRect.bottom + 4;
+  if (left + pw > window.innerWidth - 8)  left = window.innerWidth - pw - 8;
+  if (top  + ph > window.innerHeight - 8) top  = anchorRect.top - ph - 4;
+  popup.style.left = left + 'px';
+  popup.style.top  = top  + 'px';
+
+  colorPickerActual = popup;
+  setTimeout(() => { document.addEventListener('mousedown', cerrarColorPicker, { once: true }); }, 0);
+}
+
+window.abrirColorTexto = function(btn) {
+  if (!editorActivo) { alert('Haz clic primero dentro del editor de texto.'); return; }
+  guardarRangoSeleccion();
+  const rect = btn.getBoundingClientRect();
+  crearColorPickerPopup(rect, color => {
+    restaurarRangoSeleccion();
+    if (color) {
+      document.execCommand('foreColor', false, color);
+      btn.querySelector('.color-preview-texto').style.background = color;
+    } else {
+      document.execCommand('removeFormat', false, null);
+    }
+  });
+};
+
+window.abrirColorFondo = function(btn) {
+  if (!editorActivo) { alert('Haz clic primero dentro del editor de texto.'); return; }
+  guardarRangoSeleccion();
+  const rect = btn.getBoundingClientRect();
+  crearColorPickerPopup(rect, color => {
+    restaurarRangoSeleccion();
+    if (color) {
+      document.execCommand('hiliteColor', false, color);
+      btn.querySelector('.color-preview-fondo').style.background = color;
+    } else {
+      document.execCommand('hiliteColor', false, 'transparent');
+      btn.querySelector('.color-preview-fondo').style.background = '';
+    }
+  });
+};
+
+// ══════════════════════════════
+//  CÓDIGO INLINE Y EN BLOQUE
+// ══════════════════════════════
+
+let codigoMenuActual = null;
+
+function cerrarMenuCodigo() {
+  if (codigoMenuActual) { codigoMenuActual.remove(); codigoMenuActual = null; }
+}
+
+window.abrirMenuCodigo = function(btn) {
+  if (!editorActivo) { alert('Haz clic primero dentro del editor de texto.'); return; }
+  guardarRangoSeleccion();
+  cerrarMenuCodigo();
+
+  const rect  = btn.getBoundingClientRect();
+  const popup = document.createElement('div');
+  popup.className = 'codigo-menu-popup';
+
+  const b1 = document.createElement('button');
+  b1.type = 'button';
+  b1.innerHTML = '<code class="inline-code" style="pointer-events:none;font-size:0.8rem">` `</code>&nbsp; Código en línea';
+  b1.addEventListener('mousedown', e => { e.preventDefault(); cerrarMenuCodigo(); insertarCodigoInline(); });
+
+  const b2 = document.createElement('button');
+  b2.type = 'button';
+  b2.innerHTML = '<code class="inline-code" style="pointer-events:none;font-size:0.8rem">```</code>&nbsp; Bloque de código';
+  b2.addEventListener('mousedown', e => { e.preventDefault(); cerrarMenuCodigo(); insertarCodigoBloque(); });
+
+  popup.appendChild(b1);
+  popup.appendChild(b2);
+  document.body.appendChild(popup);
+
+  let left = rect.left;
+  let top  = rect.bottom + 4;
+  const pw = popup.offsetWidth || 190;
+  if (left + pw > window.innerWidth - 8) left = window.innerWidth - pw - 8;
+  popup.style.left = left + 'px';
+  popup.style.top  = top  + 'px';
+
+  codigoMenuActual = popup;
+  setTimeout(() => { document.addEventListener('mousedown', cerrarMenuCodigo, { once: true }); }, 0);
+};
+
+function insertarCodigoInline() {
+  restaurarRangoSeleccion();
+  if (!rangoGuardado || !editorCapturado) return;
+
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(rangoGuardado);
+
+  const texto = rangoGuardado.toString() || 'código';
+  const code = document.createElement('code');
+  code.className = 'inline-code';
+  code.contentEditable = 'true';
+  code.textContent = texto;
+
+  rangoGuardado.deleteContents();
+  rangoGuardado.insertNode(code);
+
+  const range = document.createRange();
+  range.setStartAfter(code);
+  range.collapse(true);
+  sel.removeAllRanges();
+  sel.addRange(range);
+}
+
+function insertarCodigoBloque() {
+  restaurarRangoSeleccion();
+  if (!editorCapturado) return;
+
+  const sel = window.getSelection();
+  let textoSeleccionado = '';
+  if (rangoGuardado) {
+    sel.removeAllRanges();
+    sel.addRange(rangoGuardado);
+    textoSeleccionado = rangoGuardado.toString();
+    rangoGuardado.deleteContents();
+  }
+
+  const wrapper = document.createElement('div');
+  wrapper.className = 'block-code-wrap';
+  wrapper.contentEditable = 'false';
+
+  const delBtn = document.createElement('button');
+  delBtn.type = 'button';
+  delBtn.className = 'block-code-del';
+  delBtn.innerHTML = '✕';
+  delBtn.title = 'Eliminar bloque de código';
+  delBtn.onclick = () => wrapper.remove();
+
+  const pre = document.createElement('pre');
+  pre.className = 'block-code';
+  pre.contentEditable = 'true';
+  pre.textContent = textoSeleccionado || 'código aquí';
+
+  wrapper.appendChild(delBtn);
+  wrapper.appendChild(pre);
+
+  if (rangoGuardado) {
+    rangoGuardado.insertNode(wrapper);
+    const range = document.createRange();
+    range.setStartAfter(wrapper);
+    range.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(range);
+  } else {
+    editorCapturado.appendChild(wrapper);
+  }
+  pre.focus();
+}
+
+// ══════════════════════════════
+//  TABLAS EN EL EDITOR
+// ══════════════════════════════
+
+function crearControlesTabla() {
+  const bar = document.createElement('div');
+  bar.className = 'table-controls';
+  bar.innerHTML = `
+    <button type="button" class="table-ctrl-btn" onclick="tablaAddFila(this)">+ Fila</button>
+    <button type="button" class="table-ctrl-btn" onclick="tablaAddColumna(this)">+ Col</button>
+    <button type="button" class="table-ctrl-btn danger" onclick="tablaDelFila(this)">− Fila</button>
+    <button type="button" class="table-ctrl-btn danger" onclick="tablaDelColumna(this)">− Col</button>
+    <button type="button" class="table-ctrl-btn danger" onclick="this.closest('.editor-table-wrap').remove()" title="Eliminar tabla">🗑️</button>
+  `;
+  return bar;
+}
+
+window.abrirModalTabla = function() {
+  if (!editorActivo) { alert('Haz clic primero dentro del editor de texto.'); return; }
+  guardarRangoSeleccion();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'modal-tabla-insert';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:9998;display:flex;align-items:center;justify-content:center;';
+  overlay.innerHTML = `
+    <div style="background:#16213e;border:2px solid #4285F4;border-radius:14px;padding:28px;width:90%;max-width:300px;">
+      <h3 style="color:#4285F4;margin-bottom:18px;font-size:1.1rem;">⊞ Insertar tabla</h3>
+      <label style="display:block;color:#999;font-size:0.85rem;margin-bottom:5px;">Filas</label>
+      <input type="number" id="tabla-filas" min="1" max="30" value="3"
+        style="width:100%;background:#0f3460;border:1px solid #1a4a8a;border-radius:7px;color:#fff;padding:9px 11px;font-size:0.92rem;outline:none;margin-bottom:14px;" />
+      <label style="display:block;color:#999;font-size:0.85rem;margin-bottom:5px;">Columnas</label>
+      <input type="number" id="tabla-cols" min="1" max="20" value="3"
+        style="width:100%;background:#0f3460;border:1px solid #1a4a8a;border-radius:7px;color:#fff;padding:9px 11px;font-size:0.92rem;outline:none;margin-bottom:20px;" />
+      <div style="display:flex;gap:8px;">
+        <button id="btn-confirmar-tabla"
+          style="flex:1;background:#4285F4;color:#fff;border:none;padding:11px;border-radius:9px;font-size:0.95rem;font-weight:bold;cursor:pointer;">
+          Insertar
+        </button>
+        <button onclick="document.getElementById('modal-tabla-insert').remove()"
+          style="flex:1;background:transparent;border:1px solid #444;color:#888;padding:11px;border-radius:9px;font-size:0.92rem;cursor:pointer;">
+          Cancelar
+        </button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  document.getElementById('tabla-filas').focus();
+
+  document.getElementById('btn-confirmar-tabla').addEventListener('click', () => {
+    const filas = Math.max(1, parseInt(document.getElementById('tabla-filas').value) || 3);
+    const cols  = Math.max(1, parseInt(document.getElementById('tabla-cols').value)  || 3);
+    overlay.remove();
+    insertarTabla(filas, cols);
+  });
+};
+
+function insertarTabla(filas, cols) {
+  restaurarRangoSeleccion();
+
+  const wrapper = document.createElement('div');
+  wrapper.className = 'editor-table-wrap';
+  wrapper.contentEditable = 'false';
+  wrapper.appendChild(crearControlesTabla());
+
+  const table = document.createElement('table');
+  table.className = 'editor-table';
+
+  for (let r = 0; r < filas; r++) {
+    const tr = document.createElement('tr');
+    for (let c = 0; c < cols; c++) {
+      const td = document.createElement('td');
+      td.contentEditable = 'true';
+      td.addEventListener('focus', () => {
+        const edParent = wrapper.closest('.editor-content');
+        if (edParent) editorActivo = edParent;
+      });
+      tr.appendChild(td);
+    }
+    table.appendChild(tr);
+  }
+  wrapper.appendChild(table);
+
+  if (rangoGuardado) {
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(rangoGuardado);
+    rangoGuardado.deleteContents();
+    rangoGuardado.insertNode(wrapper);
+    const range = document.createRange();
+    range.setStartAfter(wrapper);
+    range.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(range);
+  } else if (editorCapturado) {
+    editorCapturado.appendChild(wrapper);
+  }
+
+  const firstCell = wrapper.querySelector('td');
+  if (firstCell) firstCell.focus();
+}
+
+window.tablaAddFila = function(btn) {
+  const table = btn.closest('.editor-table-wrap').querySelector('.editor-table');
+  const cols  = table.rows[0]?.cells.length || 1;
+  const tr    = document.createElement('tr');
+  for (let c = 0; c < cols; c++) {
+    const td = document.createElement('td');
+    td.contentEditable = 'true';
+    tr.appendChild(td);
+  }
+  table.appendChild(tr);
+};
+
+window.tablaDelFila = function(btn) {
+  const table = btn.closest('.editor-table-wrap').querySelector('.editor-table');
+  if (table.rows.length > 1) table.deleteRow(table.rows.length - 1);
+};
+
+window.tablaAddColumna = function(btn) {
+  const table = btn.closest('.editor-table-wrap').querySelector('.editor-table');
+  [...table.rows].forEach(row => {
+    const td = document.createElement('td');
+    td.contentEditable = 'true';
+    row.appendChild(td);
+  });
+};
+
+window.tablaDelColumna = function(btn) {
+  const table = btn.closest('.editor-table-wrap').querySelector('.editor-table');
+  [...table.rows].forEach(row => {
+    if (row.cells.length > 1) row.deleteCell(row.cells.length - 1);
+  });
+};
+
 
 // ══════════════════════════════
 //  MODAL NUEVA MARCA
@@ -1198,6 +1577,13 @@ function crearFormSubcat(prefijo, datos) {
       </select>
       <div class="toolbar-sep"></div>
       <button type="button" class="btn-img-subcat" title="Insertar imagen">🖼️</button>
+      <div class="toolbar-sep"></div>
+      <button type="button" class="btn-color-texto" onclick="abrirColorTexto(this)" title="Color de texto"><span class="color-preview-texto"></span></button>
+      <button type="button" class="btn-color-fondo" onclick="abrirColorFondo(this)" title="Resaltar texto"><span class="color-preview-fondo"></span></button>
+      <div class="toolbar-sep"></div>
+      <button type="button" onclick="abrirMenuCodigo(this)" title="Código inline o bloque"><span class="ico-code">&lt;/&gt;</span></button>
+      <div class="toolbar-sep"></div>
+      <button type="button" onclick="abrirModalTabla()" title="Insertar tabla">⊞</button>
     </div>
     <div class="editor-content subcat-editor" contenteditable="true" data-placeholder="Descripción de la subcategoría..."></div>
     ${fotosExistHTML}
