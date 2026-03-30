@@ -24,7 +24,7 @@ const CAPAS_EXTRA = [];
 
 import { initializeApp }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, updateDoc }
+import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, updateDoc, setDoc }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
@@ -33,6 +33,10 @@ const fbApp   = initializeApp(firebaseConfig);
 const db      = getFirestore(fbApp);
 const auth    = getAuth(fbApp);
 const pinsCol = collection(db, 'pins');
+
+// — Lecturas por usuario —
+let readsData        = {};   // { pinId: isoTimestamp }
+let readsUnsubscribe = null;
 
 // — Mapa —
 const bounds = [[0, 0], [ALTO_MAPA, ANCHO_MAPA]];
@@ -336,6 +340,20 @@ let usuarioActual = null;
 
 onAuthStateChanged(auth, (usuario) => {
   usuarioActual = usuario;
+
+  // Gestionar suscripción a lecturas del usuario
+  if (readsUnsubscribe) { readsUnsubscribe(); readsUnsubscribe = null; }
+
+  if (usuario) {
+    readsUnsubscribe = onSnapshot(doc(db, 'reads', usuario.uid), (snap) => {
+      readsData = snap.exists() ? snap.data() : {};
+      actualizarClasesTooltips();
+    });
+  } else {
+    readsData = {};
+    actualizarClasesTooltips();
+  }
+
   actualizarUI(usuario);
 });
 
@@ -375,6 +393,47 @@ const markersPorId  = {};  // id → marker Leaflet
 const datosPorId    = {};  // id → objeto marca (para actualizar referencias)
 
 // ══════════════════════════════
+//  SISTEMA DE LEÍDO / NO LEÍDO
+// ══════════════════════════════
+
+function esNoLeido(datos) {
+  if (!usuarioActual) return false;
+  const lastMod = datos.updatedAt || datos.creadoEn;
+  if (!lastMod) return false;
+  const readAt = readsData[datos.id];
+  if (!readAt) return true;          // Nunca abierto → no leído
+  return lastMod > readAt;           // Modificado después de la última lectura
+}
+
+function actualizarClaseTooltip(id) {
+  const tooltip = tooltipsPorId[id];
+  if (!tooltip) return;
+  const el = tooltip.getElement();
+  if (!el) return;
+  const noLeido = esNoLeido(datosPorId[id]);
+  el.classList.toggle('tooltip-no-leido', noLeido);
+  el.classList.toggle('tooltip-leido',    !noLeido);
+}
+
+function actualizarClasesTooltips() {
+  for (const id of Object.keys(tooltipsPorId)) {
+    actualizarClaseTooltip(id);
+  }
+}
+
+async function marcarComoLeido(pinId) {
+  if (!usuarioActual) return;
+  const ahora = new Date().toISOString();
+  readsData[pinId] = ahora;           // Actualización optimista local
+  actualizarClaseTooltip(pinId);
+  try {
+    await setDoc(doc(db, 'reads', usuarioActual.uid), { [pinId]: ahora }, { merge: true });
+  } catch (err) {
+    console.error('Error marcando como leído:', err);
+  }
+}
+
+// ══════════════════════════════
 //  CARGAR Y ESCUCHAR MARCAS
 // ══════════════════════════════
 
@@ -401,6 +460,8 @@ onSnapshot(pinsCol, (snapshot) => {
         markersPorId[datos.id].off('click');
         markersPorId[datos.id].on('click', () => abrirPanel(datosPorId[datos.id]));
       }
+      // Refrescar estado leído/no leído
+      actualizarClaseTooltip(datos.id);
     }
 
     if (change.type === 'removed') {
@@ -430,7 +491,7 @@ function añadirMarcaAlMapa(marca) {
   if (debeEstarVisible(marca)) grupoPins.addLayer(marker);
   markersPorId[marca.id] = marker;
 
-  const etiqueta = L.tooltip({ permanent: true, direction: 'top', offset: [0, -14] })
+  const etiqueta = L.tooltip({ permanent: true, direction: 'top', offset: [0, -14], className: esNoLeido(marca) ? 'tooltip-no-leido' : 'tooltip-leido' })
     .setContent(marca.nombre)
     .setLatLng([marca.lat, marca.lng]);
   if (debeEstarVisible(marca)) grupoNombres.addLayer(etiqueta);
@@ -1129,7 +1190,8 @@ window.guardarPin = async function() {
       fotos: urlsFotos,
       subcategorias,
       autor: usuarioActual.displayName || usuarioActual.email,
-      creadoEn: new Date().toISOString(),
+      creadoEn:  new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     });
     cerrarModal();
   } catch (err) {
@@ -1169,6 +1231,7 @@ let marcaAbierta = null;
 
 window.abrirPanel = function(marca) {
   marcaAbierta = marca;
+  marcarComoLeido(marca.id);
   const contenido = document.getElementById('panel-contenido');
 
   // Soporte legacy: si la descripción es texto plano (sin etiquetas HTML), convertir saltos
@@ -1390,7 +1453,7 @@ window.guardarEdicion = async function() {
     const todasLasFotos = [...fotosExistentes, ...urlsFotosNuevas];
     const subcategorias = await recogerSubcats('edit-subcats-wrap');
 
-    await updateDoc(doc(db, 'pins', marcaAbierta.id), { nombre, categoria, descripcion, fotos: todasLasFotos, subcategorias });
+    await updateDoc(doc(db, 'pins', marcaAbierta.id), { nombre, categoria, descripcion, fotos: todasLasFotos, subcategorias, updatedAt: new Date().toISOString() });
 
     marcaAbierta.nombre      = nombre;
     marcaAbierta.categoria   = categoria;
