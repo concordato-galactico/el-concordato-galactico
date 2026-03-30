@@ -160,7 +160,7 @@ body {
   word-break: break-word;
 }
 #panel-contenido .fecha { font-size: 0.78rem; color: #555; margin-bottom: 8px; }
-#panel-contenido .autor { font-size: 0.8rem; color: #4285F4; margin-top: 20px; padding-top: 14px; border-top: 1px solid #0f3460; }
+#panel-contenido .autor { font-size: 0.8rem; color: #4285F4; margin-top: 0; padding-top: 14px; border-top: 1px solid #0f3460; }
 
 .fotos-grid {
   display: flex;
@@ -859,7 +859,7 @@ body {
   right: 54px;
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 2px;
   z-index: 10;
   flex-direction: row-reverse; /* Los más recientes a la derecha */
 }
@@ -871,7 +871,7 @@ body {
   opacity: 0.88;
   filter: drop-shadow(0 1px 3px rgba(0,0,0,0.5));
   transition: opacity 0.15s, transform 0.15s;
-  margin-top: 1px;
+  margin-top: -6px;
 }
 .panel-subcat-icon:hover {
   opacity: 1;
@@ -884,6 +884,7 @@ body {
 .subcat-franja {
   border-top: 1px solid #0f3460;
   margin-top: 8px;
+  margin-bottom: 0;
   overflow: hidden;
 }
 
@@ -902,8 +903,8 @@ body {
 }
 
 .subcat-franja-icono {
-  width: 26px;
-  height: 26px;
+  width: 104px;
+  height: 104px;
   object-fit: contain;
   flex-shrink: 0;
   margin-left: -6px;
@@ -947,7 +948,7 @@ body {
 }
 
 .subcat-franja-cuerpo {
-  padding: 4px 8px 14px 38px;
+  padding: 4px 8px 0 38px;
   animation: subcatAbrir 0.18s ease;
 }
 
