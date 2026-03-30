@@ -817,9 +817,9 @@ window.abrirPanel = function(marca) {
     ${marca.categoria ? `<p class="categoria"><strong>Categoría:</strong> ${marca.categoria}</p>` : ''}
     <div class="descripcion">${descHTML || '<em>Sin descripción</em>'}</div>
     ${fotosHTML}
+    ${subcatsHTML}
     ${marca.autor ? `<p class="autor">✍️ ${marca.autor}</p>` : ''}
     ${btnsAccion}
-    ${subcatsHTML}
   `;
 
   // Iconos de subcategorías en el encabezado del panel (a la izquierda de la X)
@@ -1332,12 +1332,6 @@ function renderSubcatsEnPanel(subcats) {
       ? `<div class="fotos-grid">${sub.fotos.map(url =>
           `<img src="${url}" onclick="abrirLightbox('${url}')" />`).join('')}</div>`
       : '';
-    const botonesAccion = puedeEditar
-      ? `<div class="subcat-btns-accion">
-           <button class="btn-editar-subcat" onclick="abrirEditarSubcat(${i})">✏️ Editar subcategoría</button>
-           <button class="btn-borrar-subcat-panel" onclick="borrarSubcatPanel(${i})">🗑️ Borrar</button>
-         </div>`
-      : '';
 
     return `
       <div class="subcat-franja" data-index="${i}">
@@ -1350,7 +1344,6 @@ function renderSubcatsEnPanel(subcats) {
         <div class="subcat-franja-cuerpo oculto">
           <div class="descripcion">${descHTML || '<em>Sin descripción</em>'}</div>
           ${fotosHTML}
-          ${botonesAccion}
         </div>
       </div>`;
   }).join('');

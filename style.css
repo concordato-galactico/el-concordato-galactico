@@ -855,7 +855,7 @@ body {
 ══════════════════════════════ */
 #panel-subcat-icons {
   position: absolute;
-  top: 13px;
+  top: 18px;
   right: 54px;
   display: flex;
   align-items: center;
@@ -865,8 +865,8 @@ body {
 }
 
 .panel-subcat-icon {
-  width: 28px;
-  height: 28px;
+  width: 56px;
+  height: 56px;
   object-fit: contain;
   opacity: 0.88;
   filter: drop-shadow(0 1px 3px rgba(0,0,0,0.5));
@@ -901,8 +901,8 @@ body {
 }
 
 .subcat-franja-icono {
-  width: 26px;
-  height: 26px;
+  width: 52px;
+  height: 52px;
   object-fit: contain;
   flex-shrink: 0;
   filter: drop-shadow(0 1px 3px rgba(0,0,0,0.4));
