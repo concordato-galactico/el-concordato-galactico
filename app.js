@@ -105,6 +105,7 @@ const estadoCapas  = { marcas: true, nombres: true };
 
 // — Filtro por categoría —
 const CATEGORIAS = [
+  'La Astralis',
   'Armada',
   'Batalla Naval',
   'Capital',
