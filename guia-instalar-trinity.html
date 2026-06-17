@@ -734,9 +734,13 @@ MYSQL_LIBRARY     = C:/Program Files/MariaDB 10.11/lib/libmariadb.lib</code></pr
     <div class="code-wrap"><pre><code>C:/local/boost_1_87_0</code></pre></div>
     <p>(ajusta el número de versión al que instalaste tú)</p>
 
+    <div class="callout callout-note"><span class="icon">💡</span><p>Si al buscar <code>BOOST_ROOT</code> no aparece ninguna fila (puede pasar en la primera Configure), no existe todavía como variable y no puedes "editarla" sin más. En ese caso pulsa el botón <strong>"Add Entry"</strong> (arriba de la lista) y créala a mano: Name → <code>BOOST_ROOT</code>, Type → <code>PATH</code>, Value → la ruta donde instalaste Boost. Acepta y sigue con el Configure de abajo.</p></div>
+
     <ol start="2">
       <li>Haz clic en <strong>"Configure"</strong> otra vez. Las líneas rojas deberían desaparecer casi todas.</li>
     </ol>
+
+    <div class="callout callout-tip"><span class="icon">💡</span><p>Es normal que se queden algunas filas en rojo aunque todo haya ido bien — por ejemplo <code>LIB_EAY_DEBUG</code>, <code>LIB_EAY_RELEASE</code>, <code>SSL_EAY_DEBUG</code> o <code>SSL_EAY_RELEASE</code> (variables internas que crea OpenSSL). El rojo en CMake GUI solo significa "esta variable es nueva o cambió en esta pasada", no significa error. Lo que importa es el texto del log de abajo: si termina en <code>Configuring done</code> sin líneas de error, vas bien y puedes seguir a Generate sin tocar esas filas.</p></div>
 
     <h4>Si siguen quedando líneas rojas con "OPENSSL" en el nombre:</h4>
     <p>Busca <strong><code>OPENSSL_ROOT_DIR</code></strong> → pon:</p>
