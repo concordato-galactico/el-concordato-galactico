@@ -946,6 +946,53 @@ mmaps_generator.exe</code></pre></div>
       <li><code>gt</code></li>
       <li><code>vmaps</code></li>
     </ul>
+
+    <h4>Así debe quedar tu carpeta del servidor al terminar este paso:</h4>
+
+    <div class="code-wrap tree">
+      <pre><code>server\
+├── bin\                  ← del Paso 3 (INSTALL)
+│   ├── worldserver.exe
+│   ├── bnetserver.exe
+│   ├── mapextractor.exe
+│   ├── vmap4extractor.exe
+│   ├── vmap4assembler.exe
+│   ├── mmaps_generator.exe
+│   ├── connection_patcher.exe
+│   └── (varias .dll necesarias para arrancar)
+│
+├── data\                 ← AQUÍ aterriza todo lo de este paso
+│   ├── dbc\
+│   ├── maps\
+│   ├── cameras\
+│   ├── gt\
+│   ├── vmaps\
+│   └── (mmaps\ — opcional, normal que no la tengas aún)
+│
+├── logs\                 ← vacía todavía, se llena en el Paso 9
+└── etc\
+    ├── worldserver.conf.dist
+    └── bnetserver.conf.dist
+        (worldserver.conf y bnetserver.conf no existen aún, se crean en el Paso 7)</code></pre>
+    </div>
+
+    <h4>Y así debe quedar la carpeta de tu cliente WoW justo después de extraer:</h4>
+
+    <div class="code-wrap tree">
+      <pre><code>D:\WoW\
+├── Wow.exe                    ← el cliente, no lo tocas
+├── mapextractor.exe            ← copiado por ti, se puede borrar luego
+├── vmap4extractor.exe           ← idem
+├── vmap4assembler.exe           ← idem
+├── dbc\          ──┐
+├── maps\            │
+├── cameras\          ├── estas 5 son las que MUEVES a server\data\
+├── gt\               │
+├── vmaps\         ──┘
+└── Buildings\                 ← desechable, bórrala, no se mueve</code></pre>
+    </div>
+
+    <div class="callout callout-tip"><span class="icon">💡</span><p>Solo se mueven <code>dbc</code>, <code>maps</code>, <code>cameras</code>, <code>gt</code> y <code>vmaps</code>. La carpeta <code>Buildings\</code> del cliente es basura temporal que usó <code>vmap4assembler</code> y ya no sirve para nada — puedes borrarla con confianza.</p></div>
   </section>
 
   <!-- ===================== PASO 7 ===================== -->
